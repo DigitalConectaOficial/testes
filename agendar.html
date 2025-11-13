@@ -24,6 +24,16 @@
         .form-group label { display: block; margin-bottom: 8px; color: var(--text-gray); font-size: 0.9rem; font-weight: 500; }
         .form-control { width: 100%; padding: 15px; background: var(--black); border: 1px solid #444; color: var(--white); border-radius: 8px; font-size: 1rem; appearance: none; }
         .form-control:focus { border-color: var(--gold); }
+
+        /* Estilos para o Date Picker em modo escuro */
+        .form-control[type="date"] {
+            color-scheme: dark;
+        }
+        .form-control[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+            cursor: pointer;
+        }
+
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 10px; transition: opacity 0.2s; }
         .btn-primary { background: var(--gold); color: var(--black); text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-primary:active { opacity: 0.8; }
@@ -39,7 +49,6 @@
     <div class="container">
         <div class="logo">Marcar Horário <span>BarberControl</span></div>
         
-        <!-- ==== BUG CORRIGIDO: Removido <form> e <button type="submit"> ==== -->
         <div id="form-agendamento">
             <div class="form-group">
                 <label>Seu Nome</label>
@@ -60,11 +69,30 @@
                     <option value="Pezinho">Pezinho</option>
                 </select>
             </div>
+            
+            <!-- ==== CAMPO DE HORA MUDADO ==== -->
             <div class="form-group">
-                <label>Data e Hora</label>
-                <input type="datetime-local" id="agenda-datahora" class="form-control" required>
+                <label>Data</label>
+                <input type="date" id="agenda-data" class="form-control" required>
             </div>
-            <!-- ==== BUG CORRIGIDO: Adicionado type="button" e onclick ==== -->
+            <div class="form-group">
+                <label>Horário</label>
+                <select id="agenda-hora" class="form-control" required>
+                    <option value="" disabled selected>Escolha um horário...</option>
+                    <option value="08:00">08:00</option>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                    <option value="11:00">11:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                </select>
+            </div>
+            <!-- ==== FIM DA MUDANÇA ==== -->
+
             <button type="button" class="btn btn-primary" id="btn-submit" onclick="handleAgendamento()">Confirmar Agendamento</button>
         </div>
         
@@ -79,7 +107,7 @@
             collection, 
             addDoc, 
             setDoc,
-            getDocs,
+            getDocs, 
             query, 
             where,
             Timestamp 
@@ -90,13 +118,12 @@
         // ===================================================================
         
         const firebaseConfig = {
-            apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
-  authDomain: "barbercontrol-6b1f1.firebaseapp.com",
-  projectId: "barbercontrol-6b1f1",
-  storageBucket: "barbercontrol-6b1f1.firebasestorage.app",
-  messagingSenderId: "984412023617",
-  appId: "1:984412023617:web:1b10bf21e1ec3a63bf0fc0",
-  measurementId: "G-JR9PJSCHWG"
+            apiKey: "COLE-SUA-NOVA-API-KEY-AQUI",
+            authDomain: "COLE-SEU-NOVO-AUTH-DOMAIN-AQUI",
+            projectId: "COLE-SEU-NOVO-PROJECT-ID-AQUI",
+            storageBucket: "COLE-SEU-NOVO-STORAGE-BUCKET-AQUI",
+            messagingSenderId: "COLE-SEU-NOVO-MESSAGING-SENDER-ID-AQUI",
+            appId: "COLE-SEU-NOVO-APP-ID-AQUI"
         };
         // ===================================================================
         
@@ -105,7 +132,7 @@
 
         const messageDiv = document.getElementById('message');
         const submitButton = document.getElementById('btn-submit');
-        const form = document.getElementById('form-agendamento'); // Div do formulário
+        const form = document.getElementById('form-agendamento'); 
 
         const urlParams = new URLSearchParams(window.location.search);
         const barbeiroId = urlParams.get('id');
@@ -115,7 +142,6 @@
             form.style.display = 'none';
         }
 
-        // ==== BUG CORRIGIDO: Movida a lógica para uma função window ====
         window.handleAgendamento = async () => {
             if (!barbeiroId) return;
 
@@ -127,14 +153,19 @@
                 const nome = document.getElementById('agenda-nome').value;
                 const telefone = document.getElementById('agenda-telefone').value;
                 const servico = document.getElementById('agenda-servico').value;
-                const dataHoraStr = document.getElementById('agenda-datahora').value;
                 
-                // Validação de campos vazios
-                if (!nome || !telefone || !servico || !dataHoraStr) {
+                // ==== LÓGICA DE DATA/HORA MUDADA ====
+                const dataStr = document.getElementById('agenda-data').value; // Ex: "2025-11-14"
+                const horaStr = document.getElementById('agenda-hora').value; // Ex: "09:00"
+                
+                if (!nome || !telefone || !servico || !dataStr || !horaStr) {
                     throw new Error("Por favor, preencha todos os campos.");
                 }
 
-                const dataHoraSelecionada = new Date(dataHoraStr);
+                // Combina a data e a hora no formato ISO (local)
+                const dataHoraSelecionada = new Date(`${dataStr}T${horaStr}:00`);
+                // ==== FIM DA MUDANÇA ====
+
                 const agora = new Date();
 
                 if (dataHoraSelecionada < agora) {
@@ -143,9 +174,20 @@
 
                 const dataHora = Timestamp.fromDate(dataHoraSelecionada);
 
-                const clienteId = await findOrCreateClient(barbeiroId, nome, telefone);
-
                 const agendaRef = collection(db, 'empresas', barbeiroId, 'agendamentos');
+                
+                const q = query(agendaRef, 
+                    where("dataHora", "==", dataHora),
+                    where("status", "==", "pendente") 
+                );
+                const querySnapshot = await getDocs(q);
+
+                if (!querySnapshot.empty) {
+                    throw new Error("Desculpe, este horário exato já foi reservado. Por favor, escolha outro.");
+                }
+
+                const clienteId = await findOrCreateClient(barbeiroId, nome, telefone);
+                
                 await addDoc(agendaRef, {
                     clienteId: clienteId,
                     clienteNome: nome, 
@@ -155,11 +197,11 @@
                 });
 
                 showMessage("success", "Horário marcado com sucesso! Até lá.");
-                // Limpa o formulário manualmente
                 document.getElementById('agenda-nome').value = '';
                 document.getElementById('agenda-telefone').value = '';
                 document.getElementById('agenda-servico').value = '';
-                document.getElementById('agenda-datahora').value = '';
+                document.getElementById('agenda-data').value = ''; // Limpa campo de data
+                document.getElementById('agenda-hora').value = ''; // Limpa campo de hora
 
             } catch (error) {
                 showMessage("error", error.message || "Erro ao marcar horário. Tente novamente.");
@@ -173,11 +215,12 @@
         async function findOrCreateClient(userId, nome, telefone) {
             const clientesRef = collection(db, 'empresas', userId, 'clientes');
             
-            const q = query(clientesRef, where("telefone", "==", telefone));
-            const querySnapshot = await getDocs(q);
+            const querySnapshot = await getDocs(clientesRef);
             
-            if (!querySnapshot.empty) {
-                return querySnapshot.docs[0].id;
+            const existingClient = querySnapshot.docs.find(doc => doc.data().telefone === telefone);
+
+            if (existingClient) {
+                return existingClient.id;
             } else {
                 const novoCliente = {
                     nome: nome,
