@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BarberControl - Gestão</title>
+    
+    <!-- 
+      ==== PACOTE DE ÍCONES PROFISSIONAL ====
+      (Lembre-se de subir estes ficheiros .png para o repositório)
+    -->
+    <link rel="apple-touch-icon" sizes="57x57" href="apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="manifest.json">
+    <meta name="msapplication-TileColor" content="#C59A3B">
+    <meta name="msapplication-TileImage" content="ms-icon-144x144.png">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BarberControl">
+    <meta name="theme-color" content="#1A1A1A">
+    <!-- ==== FIM DO BLOCO DE ÍCONES ==== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --gold: #C59A3B; 
+            --black: #111111;
+            --dark-gray: #1A1A1A;
+            --light-gray: #333333;
+            --white: #FFFFFF;
+            --text-gray: #CCCCCC;
+            --green: #4CAF50;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; outline: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--black); color: var(--white); -webkit-font-smoothing: antialiased; padding-bottom: 90px; }
+        
+        header { background: var(--dark-gray); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--light-gray); position: sticky; top: 0; z-index: 100; }
+        .logo { font-weight: 800; font-size: 1.2rem; color: var(--white); letter-spacing: 1px; }
+        .logo span { color: var(--gold); }
+        .user-icon { width: 35px; height: 35px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--black); font-size: 14px; cursor: pointer; }
+
+        #auth-view { padding: 30px 20px; max-width: 400px; margin: 40px auto 0; background: var(--dark-gray); border-radius: 12px; }
+        .auth-form { display: block; }
+
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.3s; }
+        
+        /* ==== FIX 1: ADICIONADO PADDING INFERIOR ÀS PÁGINAS ==== */
+        #page-dashboard, #page-clients, #page-reports, #page-agenda {
+            padding-bottom: 100px; 
+        }
+
+        #app-view { display: none; }
+
+        .cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
+        .card { background: var(--dark-gray); border: 1px solid var(--light-gray); padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+        .card h3 { font-size: 0.8rem; color: var(--text-gray); text-transform: uppercase; margin-bottom: 5px; font-weight: 600; }
+        .card .value { font-size: 1.8rem; font-weight: 700; color: var(--white); }
+        .card .sub { font-size: 0.8rem; color: var(--green); margin-top: 5px; font-weight: 500; }
+
+        .chart-container { padding: 0 20px; margin-bottom: 20px; }
+        .chart-box { background: var(--dark-gray); border: 1px solid var(--light-gray); border-radius: 12px; padding: 15px; }
+
+        .section-title { padding: 0 20px; margin-top: 10px; font-size: 1.1rem; font-weight: 600; color: var(--gold); margin-bottom: 15px; }
+        .list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+        .list-item { background: var(--dark-gray); padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border-left: 3px solid var(--gold); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .item-info h4 { font-size: 1rem; color: var(--white); font-weight: 600; }
+        .item-info p { font-size: 0.85rem; color: var(--text-gray); margin-top: 4px; }
+        .item-price { font-weight: 700; color: var(--gold); font-size: 1.1rem; }
+        .btn-delete { background: none; border: none; color: #ff4444; font-size: 1.5rem; margin-left: 15px; cursor: pointer; padding: 0 5px; }
+
+        /* NOVO: Estilo para item da agenda */
+        .agenda-item { 
+            background: var(--dark-gray); 
+            padding: 15px; 
+            border-radius: 8px; 
+            border-left: 3px solid var(--gold); 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .agenda-item:hover { background: var(--light-gray); }
+        .agenda-time { font-size: 1.1rem; font-weight: 700; color: var(--gold); min-width: 60px; }
+        .agenda-info h4 { font-size: 1rem; color: var(--white); }
+        .agenda-info p { font-size: 0.9rem; color: var(--text-gray); }
+
+
+        .fab { position: fixed; bottom: 90px; right: 25px; width: 60px; height: 60px; background: var(--gold); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 35px; color: var(--black); box-shadow: 0 5px 15px rgba(197, 154, 59, 0.4); cursor: pointer; z-index: 200; border: none; transition: transform 0.2s; } 
+        .fab:active { transform: scale(0.95); }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 300; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
+        .modal.active { display: flex; animation: fadeIn 0.2s ease-in-out; }
+        .modal-content { background: var(--dark-gray); width: 100%; max-width: 400px; padding: 25px; border-radius: 12px; border: 1px solid var(--light-gray); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .modal-header { font-size: 1.3rem; font-weight: 700; margin-bottom: 25px; color: var(--white); border-bottom: 1px solid var(--light-gray); padding-bottom: 15px; }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-gray); font-size: 0.9rem; font-weight: 500; }
+        .form-control { width: 100%; padding: 15px; background: var(--black); border: 1px solid #444; color: var(--white); border-radius: 8px; font-size: 1rem; appearance: none; }
+        .form-control:focus { border-color: var(--gold); }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 10px; transition: opacity 0.2s; }
+        .btn-primary { background: var(--gold); color: var(--black); text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-primary:active { opacity: 0.8; }
+        .btn-secondary { background: var(--light-gray); color: var(--white); }
+        .btn-cancel { background: transparent; color: var(--text-gray); margin-top: 15px; }
+
+        /* NOVO: CSS para 4 itens no menu */
+        .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--dark-gray); border-top: 1px solid var(--light-gray); display: flex; justify-content: space-around; padding: 10px 0; z-index: 90; }
+        .nav-item { color: var(--text-gray); font-size: 0.7rem; text-align: center; text-decoration: none; padding: 5px; background: none; border: none; cursor: pointer; flex: 1; } /* flex: 1 para dividir o espaço */
+        .nav-item.active { color: var(--gold); }
+        .nav-item svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; }
+        .nav-item path { fill: var(--text-gray); }
+        .nav-item.active path { fill: var(--gold); }
+
+        .report-actions { padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .report-result-box { margin: 20px; background: var(--dark-gray); border-radius: 12px; border: 1px solid var(--light-gray); padding: 20px; }
+        .report-result-box h3 { color: var(--gold); margin-bottom: 15px; border-bottom: 1px solid var(--light-gray); padding-bottom: 10px; }
+        .report-result-box p { color: var(--white); font-size: 1rem; line-height: 1.6; }
+        .report-result-box span { color: var(--text-gray); font-size: 0.9rem; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div id="auth-view">
+        <div class="logo" style="text-align: center; margin-bottom: 30px;">Barber<span>Control</span></div>
+        
+        <div id="form-login" class="auth-form">
+            <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="login-email" class="form-control" placeholder="seu@email.com" required>
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="login-pass" class="form-control" placeholder="••••••••" required>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="handleLogin()">Entrar</button>
+        </div>
+    </div>
+
+
+    <div id="app-view">
+        <header>
+            <div class="logo">Barber<span>Control</span></div>
+            <div class="user-icon" onclick="handleLogout()">SAIR</div>
+        </header>
+
+        <div id="page-dashboard" class="page active">
+            <div class="cards-grid">
+                <div class="card">
+                    <h3>Faturamento Hoje</h3>
+                    <div class="value" id="dash-fat-hoje">R$ 0,00</div>
+                    <div class="sub" id="dash-atend-hoje">0 atendimentos</div>
+                </div>
+                <div class="card">
+                    <h3>Clientes Hoje</h3>
+                    <div class="value" id="dash-clientes-hoje">0</div>
+                    <div class="sub" id="dash-novos-hoje">0 novos</div>
+                </div>
+            </div>
+
+            <div class="section-title">Desempenho (7 Dias)</div>
+            <div class="chart-container">
+                <div class="chart-box">
+                    <canvas id="financeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="section-title">Últimos Atendimentos</div>
+            <div class="list" id="lista-atendimentos-recentes"></div>
+        </div>
+
+        <div id="page-clients" class="page">
+            <div style="padding: 20px; padding-bottom: 0;">
+                <button class="btn btn-primary" onclick="abrirModalNovoCliente()">+ NOVO CLIENTE</button>
+            </div>
+            
+            <div style="padding: 20px;">
+                <input type="search" id="search-cliente" class="form-control" placeholder="Pesquisar cliente...">
+            </div>
+
+            <div class="section-title">Meus Clientes</div>
+            <div class="list" id="lista-clientes"></div>
+        </div>
+        
+        <!-- ==== NOVA PÁGINA: AGENDA ==== -->
+        <div id="page-agenda" class="page">
+            <div class="section-title">Agenda do Dia</div>
+            <div class="list" id="lista-agenda">
+                <!-- Agendamentos serão injetados aqui -->
+            </div>
+        </div>
+
+        <div id="page-reports" class="page">
+            <div class="section-title">Gerar Relatório</div>
+            <div class="report-actions">
+                <button class="btn btn-secondary" onclick="gerarRelatorio('dia')">Relatório Diário</button>
+                <button class="btn btn-secondary" onclick="gerarRelatorio('semana')">Relatório Semanal</button>
+                <button class="btn btn-secondary" onclick="gerarRelatorio('mes')">Relatório Mensal</button>
+            </div>
+            <div id="report-result" style="display:none;" class="report-result-box">
+                <h3 id="report-title"></h3>
+                <p id="report-faturamento"></p>
+                <p id="report-clientes"></p>
+                <p id="report-novos"></p>
+            </div>
+        </div>
+
+        <!-- ==== NAVEGAÇÃO ATUALIZADA COM 4 ABAS ==== -->
+        <nav class="nav-bottom">
+            <button class="nav-item active" onclick="showPage('page-dashboard', this)">
+                <svg viewBox="0 0 24 24"><path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z"></path></svg>
+                Dashboard
+            </button>
+            <!-- NOVA ABA: AGENDA -->
+            <button class="nav-item" onclick="showPage('page-agenda', this)">
+                <svg viewBox="0 0 24 24"><path d="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20C3,21.1 3.9,22 5,22H19C20.1,22 21,21.1 21,20V6C21,4.9 20.1,4 19,4M19,20H5V10H19V20M19,8H5V6H19V8M7,12H12V17H7V12Z"></path></svg>
+                Agenda
+            </button>
+            <button class="nav-item" onclick="showPage('page-clients', this)">
+                <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"></path></svg>
+                Clientes
+            </button>
+            <button class="nav-item" onclick="showPage('page-reports', this)">
+                <svg viewBox="0 0 24 24"><path d="M14,17H17V19H14V17M10.5,17H13.5V19H10.5V17M7,17H10V19H7V17M13,3H11V1H13V3M19.33,7.84L17.84,6.35L15.6,8.13L15.9,10.74L13.8,12.13L12.7,9.68L10.35,10.1L9.5,7.8L7.13,9.13L6,7L3.67,8.84L4.34,11.64L2,12.5V15.5L4.34,16.36L3.67,19.16L6,21L7.13,18.88L9.5,20.2L10.35,17.9L12.7,18.32L13.8,15.88L15.9,17.26L15.6,14.88L17.84,21.65L19.33,20.16L17,18L18.88,15.88L21,17L22.33,14.67L20.16,13.66L20.84,10.86L22.33,9.37L20.16,7.36L17,9.13L18.88,12.13L17,14L15.13,11.88L13,13Z"></path></svg>
+                Relatórios
+            </button>
+        </nav>
+
+        <button class="fab" onclick="abrirModalAtendimento()">+</button>
+
+        <div class="modal" id="modal-atendimento">
+            <div class="modal-content">
+                <div class="modal-header">Novo Atendimento</div>
+                <div>
+                    <!-- NOVO: Input escondido para guardar o ID do agendamento -->
+                    <input type="hidden" id="agendamento-id">
+                    
+                    <div class="form-group"><label>Cliente</label><select class="form-control" id="cliente-select" required></select></div>
+                    <div class="form-group">
+                        <label>Serviço</label>
+                        <select class="form-control" id="servico-select">
+                            <option value="Corte">Corte de Cabelo</option>
+                            <option value="Barba">Barba</option>
+                            <option value="Cabelo + Barba">Cabelo + Barba</option>
+                            <option value="Sobrancelha">Sobrancelha</option>
+                            <option value="Pezinho">Pezinho</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>Valor (R$)</label><input type="number" class="form-control" id="valor-input" placeholder="0.00" step="0.01" required inputmode="decimal"></div>
+                    <button type="button" class="btn btn-primary" onclick="salvarAtendimento()">CONFIRMAR E RECEBER</button>
+                    <button type="button" class="btn btn-cancel" onclick="fecharModal('modal-atendimento')">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="modal-cliente">
+            <div class="modal-content">
+                <div class="modal-header">Novo Cliente</div>
+                <div>
+                    <div class="form-group"><label>Nome do Cliente</label><input type="text" class="form-control" id="cliente-nome" placeholder="Ex: João Silva" required autocomplete="off"></div>
+                    <div class="form-group"><label>Telefone (Opcional)</label><input type="tel" class="form-control" id="cliente-telefone" placeholder="(99) 99999-9999" autocomplete="off"></div>
+                    <button type="button" class="btn btn-primary" onclick="salvarNovoCliente()">SALVAR CLIENTE</button>
+                    <button type="button" class="btn btn-cancel" onclick="fecharModal('modal-cliente')">Cancelar</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="modal-alerta">
+            <div class="modal-content">
+                <div class="modal-header">Aviso</div>
+                <p id="alerta-mensagem" style="padding: 20px 0; color: var(--text-gray); line-height: 1.5;"></p>
+                <button type="button" class="btn btn-primary" onclick="fecharModal('modal-alerta')">OK</button>
+            </div>
+        </div>
+
+        <div class="modal" id="modal-confirm">
+            <div class="modal-content">
+                <div class="modal-header">Confirmar Ação</div>
+                <p id="confirm-mensagem" style="padding: 20px 0; color: var(--text-gray); line-height: 1.5;"></p>
+                <button type="button" class="btn btn-primary" id="confirm-btn-sim">Sim</button>
+                <button type="button" class="btn btn-cancel" onclick="fecharModal('modal-confirm')">Não</button>
+            </div>
+        </div>
+    </div> 
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { 
+            getAuth, 
+            onAuthStateChanged, 
+            signInWithEmailAndPassword, 
+            signOut 
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            collection, 
+            addDoc, 
+            setDoc, 
+            onSnapshot, 
+            query, 
+            deleteDoc,
+            Timestamp,
+            where // NOVO: Importar 'where' para filtrar
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        
+        // ===================================================================
+        // <<< CUIDADO! CRIE UM NOVO PROJETO E COLE AS NOVAS CHAVES AQUI! >>>
+        // As suas chaves antigas estão comprometidas!
+        // ===================================================================
+        
+        const firebaseConfig = {
+           
+  apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
+  authDomain: "barbercontrol-6b1f1.firebaseapp.com",
+  projectId: "barbercontrol-6b1f1",
+  storageBucket: "barbercontrol-6b1f1.firebasestorage.app",
+  messagingSenderId: "984412023617",
+  appId: "1:984412023617:web:1b10bf21e1ec3a63bf0fc0",
+  measurementId: "G-JR9PJSCHWG"
+        };
+        // ===================================================================
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUserId = null; 
+        let clientes = [];        
+        let atendimentos = [];    
+        let agendamentos = []; // NOVO: Array para a agenda
+        let myChart = null;
+        let confirmCallback = null;
+        let clientesListener = null;
+        let atendimentosListener = null;
+        let agendamentosListener = null; // NOVO: Listener para a agenda
+
+        onAuthStateChanged(auth, (user) => {
+            const authView = document.getElementById('auth-view');
+            const appView = document.getElementById('app-view');
+            
+            if (user) {
+                currentUserId = user.uid;
+                authView.style.display = 'none';
+                appView.style.display = 'block';
+                initApp(); 
+            } else {
+                currentUserId = null;
+                authView.style.display = 'block';
+                appView.style.display = 'none';
+                
+                clientes = [];
+                atendimentos = [];
+                agendamentos = []; // NOVO
+                if (clientesListener) clientesListener();
+                if (atendimentosListener) atendimentosListener();
+                if (agendamentosListener) agendamentosListener(); // NOVO
+            }
+        });
+
+        window.handleLogin = async () => {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+
+            if (!email || !pass) {
+                showAlert("Por favor, preencha email e senha.");
+                return;
+            }
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+            } catch (error) {
+                let errorMessage = "Erro ao entrar: Email ou senha inválidos.";
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+                    errorMessage = "Email ou senha incorretos.";
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = "Formato de email inválido.";
+                }
+                showAlert(errorMessage);
+            }
+        }
+
+        window.handleLogout = () => {
+            showConfirm("Deseja realmente sair?", () => {
+                signOut(auth);
+            });
+        }
+
+        function initApp() {
+            showPage('page-dashboard', document.querySelector('.nav-item')); 
+            
+            document.getElementById('search-cliente').addEventListener('input', renderizarListaClientes);
+
+            if (clientesListener) clientesListener();
+            if (atendimentosListener) atendimentosListener();
+            if (agendamentosListener) agendamentosListener(); // NOVO
+
+            // Listener de Clientes (sem mudança)
+            const clientesRef = collection(db, 'empresas', currentUserId, 'clientes');
+            clientesListener = onSnapshot(query(clientesRef), (snapshot) => {
+                clientes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderizarListaClientes(); 
+            });
+
+            // Listener de Atendimentos (sem mudança)
+            const atendRef = collection(db, 'empresas', currentUserId, 'atendimentos');
+            atendimentosListener = onSnapshot(query(atendRef), (snapshot) => {
+                atendimentos = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    if (!data.data || !data.data.toDate) return null; 
+                    return {
+                        id: doc.id,
+                        ...data,
+                        data: data.data.toDate().toISOString() 
+                    }
+                }).filter(Boolean);
+                
+                atualizarDashboard();
+                renderizarGrafico();
+                renderizarListaRecentes();
+            });
+
+            // ==== NOVO LISTENER: AGENDAMENTOS ====
+            const agendaRef = collection(db, 'empresas', currentUserId, 'agendamentos');
+            // Filtra para mostrar apenas agendamentos pendentes
+            const q = query(agendaRef, where("status", "==", "pendente"));
+            agendamentosListener = onSnapshot(q, (snapshot) => {
+                agendamentos = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    if (!data.dataHora || !data.dataHora.toDate) return null;
+                    return {
+                        id: doc.id,
+                        ...data,
+                        dataHora: data.dataHora.toDate().toISOString()
+                    }
+                }).filter(Boolean);
+                
+                renderizarAgenda(); // Nova função para desenhar a agenda
+            });
+        }
+
+        window.showPage = (pageId, navElement) => {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            navElement.classList.add('active');
+            
+            const fab = document.querySelector('.fab');
+            // Esconde o FAB na Agenda, Clientes e Relatórios
+            fab.style.display = (pageId === 'page-dashboard') ? 'flex' : 'none';
+        }
+
+        window.abrirModalAtendimento = () => {
+            if(clientes.length === 0) {
+                showAlert("Cadastre seu primeiro cliente na aba 'Clientes' antes de lançar um atendimento."); 
+                return;
+            }
+            
+            // Limpa o formulário antes de abrir
+            document.getElementById('cliente-select').value = '';
+            document.getElementById('servico-select').value = 'Corte';
+            document.getElementById('valor-input').value = '';
+            document.getElementById('agendamento-id').value = ''; // Limpa o ID escondido
+            
+            popularSelectClientes();
+            document.getElementById('modal-atendimento').classList.add('active');
+        }
+
+        window.abrirModalNovoCliente = () => {
+            document.getElementById('modal-cliente').classList.add('active');
+            setTimeout(() => document.getElementById('cliente-nome').focus(), 100);
+        }
+
+        window.fecharModal = (modalId) => {
+            document.getElementById(modalId).classList.remove('active');
+            // Limpa o ID escondido ao fechar o modal
+            if (modalId === 'modal-atendimento') {
+                 document.getElementById('agendamento-id').value = '';
+            }
+        }
+
+        window.showAlert = (mensagem) => {
+            document.getElementById('alerta-mensagem').innerText = mensagem;
+            document.getElementById('modal-alerta').classList.add('active');
+        }
+
+        window.showConfirm = (mensagem, callback) => {
+            document.getElementById('confirm-mensagem').innerText = mensagem;
+            document.getElementById('modal-confirm').classList.add('active');
+            
+            confirmCallback = callback; 
+
+            const confirmBtn = document.getElementById('confirm-btn-sim');
+            confirmBtn.onclick = () => {
+                fecharModal('modal-confirm');
+                if(confirmCallback) {
+                    confirmCallback();
+                    confirmCallback = null; 
+                }
+            };
+        }
+
+        window.salvarNovoCliente = async () => {
+            const nome = document.getElementById('cliente-nome').value;
+            const telefone = document.getElementById('cliente-telefone').value;
+
+            if (clientes.find(c => c.nome.toLowerCase() === nome.toLowerCase())) {
+                showAlert("Já existe um cliente com esse nome."); 
+                return;
+            }
+
+            const novoCliente = {
+                nome: nome,
+                telefone: telefone,
+                dataPrimeiraVisita: null 
+            };
+            
+            try {
+                const clientesRef = collection(db, 'empresas', currentUserId, 'clientes');
+                await addDoc(clientesRef, novoCliente);
+
+                document.getElementById('cliente-nome').value = '';
+                document.getElementById('cliente-telefone').value = '';
+                
+                fecharModal('modal-cliente');
+                showAlert("Cliente salvo na nuvem!");
+            } catch (error) {
+                showAlert("Erro ao salvar cliente: " + error.message);
+            }
+        }
+
+        function popularSelectClientes() {
+            const select = document.getElementById('cliente-select');
+            select.innerHTML = '<option value="" disabled selected>Selecione um cliente</option>';
+            clientes.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(c => {
+                select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
+            });
+        }
+
+        function getNomeCliente(id) {
+            const cliente = clientes.find(c => c.id == id);
+            return cliente ? cliente.nome : "Cliente Excluído";
+        }
+
+        async function checkPrimeiraVisita(clienteId) {
+            const cliente = clientes.find(c => c.id == clienteId);
+            if (cliente && !cliente.dataPrimeiraVisita) {
+                const clienteRef = doc(db, 'empresas', currentUserId, 'clientes', clienteId);
+                await setDoc(clienteRef, { dataPrimeiraVisita: Timestamp.now() }, { merge: true });
+            }
+        }
+        
+        // ==== FUNÇÃO ATUALIZADA: SALVAR ATENDIMENTO ====
+        window.salvarAtendimento = async () => {
+            const clienteId = document.getElementById('cliente-select').value;
+            const servico = document.getElementById('servico-select').value;
+            const valor = parseFloat(document.getElementById('valor-input').value.replace(',', '.'));
+            
+            // Pega o ID do agendamento (se houver)
+            const agendamentoId = document.getElementById('agendamento-id').value;
+            
+            if (!clienteId) { showAlert("Selecione um cliente."); return; }
+            if (isNaN(valor) || valor <= 0) { showAlert("Valor inválido."); return; }
+
+            const novo = { 
+                clienteId: clienteId, 
+                servico: servico, 
+                valor: valor, 
+                data: Timestamp.now() 
+            };
+            
+            try {
+                // Salva o novo atendimento
+                const atendRef = collection(db, 'empresas', currentUserId, 'atendimentos');
+                await addDoc(atendRef, novo);
+
+                // Regista a primeira visita (se for o caso)
+                await checkPrimeiraVisita(clienteId);
+                
+                // NOVO: Se isto veio de um agendamento, apaga o agendamento
+                if (agendamentoId) {
+                    const agendaDocRef = doc(db, 'empresas', currentUserId, 'agendamentos', agendamentoId);
+                    await deleteDoc(agendaDocRef);
+                }
+                
+                fecharModal('modal-atendimento');
+                
+            } catch (error) {
+                showAlert("Erro ao salvar atendimento: " + error.message);
+            }
+        }
+
+        window.deletarAtendimento = (id) => {
+            showConfirm("Excluir este atendimento?", async () => {
+                try {
+                    const docRef = doc(db, 'empresas', currentUserId, 'atendimentos', id);
+                    await deleteDoc(docRef);
+                } catch (error) {
+                    showAlert("Erro ao deletar: " + error.message);
+                }
+            });
+        }
+
+        // ==== NOVA FUNÇÃO: Renderizar a lista da Agenda ====
+        function renderizarAgenda() {
+            const lista = document.getElementById('lista-agenda');
+            lista.innerHTML = '';
+            
+            if (agendamentos.length === 0) {
+                lista.innerHTML = '<div style="text-align:center; color:#666; padding:30px;">Nenhum horário marcado.</div>';
+                return;
+            }
+            
+            // Ordena os agendamentos por data/hora
+            const ordenados = [...agendamentos].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora));
+            
+            ordenados.forEach(item => {
+                const d = new Date(item.dataHora);
+                const div = document.createElement('div');
+                div.className = 'agenda-item';
+                div.onclick = () => converterAgendamento(item.id); // Ação de clique
+                
+                div.innerHTML = `
+                    <span class="agenda-time">${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}</span>
+                    <div class="agenda-info" style="flex: 1; margin: 0 10px;">
+                        <h4>${item.clienteNome}</h4> <!-- Assumindo que agendar.html salva 'clienteNome' -->
+                        <p>${item.servico}</p>
+                    </div>
+                    <span style="font-size: 1.2rem;">&rsaquo;</span>
+                `;
+                lista.appendChild(div);
+            });
+        }
+
+        // ==== NOVA FUNÇÃO: Converter Agendamento em Atendimento ====
+        window.converterAgendamento = (id) => {
+            const agendamento = agendamentos.find(a => a.id === id);
+            if (!agendamento) return;
+            
+            // Tenta encontrar o cliente pelo nome salvo no agendamento
+            // Nota: Se a página agendar.html salvar o clienteId, isto fica mais fácil
+            const cliente = clientes.find(c => c.nome.toLowerCase() === agendamento.clienteNome.toLowerCase());
+            
+            abrirModalAtendimento(); // Abre o modal limpo
+            
+            // Preenche os dados
+            if (cliente) {
+                document.getElementById('cliente-select').value = cliente.id;
+            } else {
+                // Se não achar o cliente (ex: nome escrito diferente), não seleciona
+                showAlert(`Cliente "${agendamento.clienteNome}" não encontrado no cadastro. Selecione manualmente.`);
+            }
+            
+            document.getElementById('servico-select').value = agendamento.servico;
+            document.getElementById('agendamento-id').value = agendamento.id; // Guarda o ID para apagar
+            document.getElementById('valor-input').focus();
+        }
+
+        function atualizarDashboard() {
+            const hojeStr = new Date().toLocaleDateString('en-CA');
+            
+            const atendimentosHoje = atendimentos.filter(a => new Date(a.data).toLocaleDateString('en-CA') === hojeStr);
+            const totalHoje = atendimentosHoje.reduce((acc, item) => acc + item.valor, 0);
+
+            const clientesAtendidosHojeIds = new Set(atendimentosHoje.map(a => a.clienteId));
+            
+            const novosClientesHoje = clientes.filter(c => {
+                if (!c.dataPrimeiraVisita) return false;
+                const dataVisita = (c.dataPrimeiraVisita.toDate ? c.dataPrimeiraVisita.toDate() : new Date(c.dataPrimeiraVisita));
+                return dataVisita.toLocaleDateString('en-CA') === hojeStr;
+            });
+            
+            document.getElementById('dash-fat-hoje').innerText = formatCurrency(totalHoje);
+            document.getElementById('dash-atend-hoje').innerText = `${atendimentosHoje.length} atendimentos`;
+            document.getElementById('dash-clientes-hoje').innerText = clientesAtendidosHojeIds.size;
+            document.getElementById('dash-novos-hoje').innerText = `${novosClientesHoje.length} novos`;
+        }
+        
+        function renderizarListaRecentes() {
+            const lista = document.getElementById('lista-atendimentos-recentes');
+            lista.innerHTML = '';
+            if(atendimentos.length === 0) {
+                lista.innerHTML = '<div style="text-align:center; color:#666; padding:30px;">Toque no + para começar.</div>';
+                return;
+            }
+            const ordenados = [...atendimentos].sort((a,b) => new Date(b.data) - new Date(a.data));
+            
+            ordenados.slice(0, 5).forEach(item => {
+                lista.appendChild(criarItemLista(item));
+            });
+        }
+        
+        function renderizarListaClientes() {
+            const lista = document.getElementById('lista-clientes');
+            lista.innerHTML = '';
+            
+            const termoBusca = document.getElementById('search-cliente').value.toLowerCase();
+            const clientesFiltrados = clientes.filter(c => 
+                c.nome.toLowerCase().includes(termoBusca) ||
+                (c.telefone && c.telefone.includes(termoBusca))
+            );
+
+            if(clientesFiltrados.length === 0) {
+                if(clientes.length > 0 && termoBusca) {
+                     lista.innerHTML = '<div style="text-align:center; color:#666; padding:30px;">Nenhum cliente encontrado para "'+termoBusca+'".</div>';
+                } else {
+                     lista.innerHTML = '<div style="text-align:center; color:#666; padding:30px;">Nenhum cliente cadastrado.</div>';
+                }
+                return;
+            }
+            
+            clientesFiltrados.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                let dataPrimeiraVisitaStr = '<span style="color:var(--gold)">• Novo</span>';
+                if(c.dataPrimeiraVisita) {
+                    const dataVisita = (c.dataPrimeiraVisita.toDate ? c.dataPrimeiraVisita.toDate() : new Date(c.dataPrimeiraVisita));
+                    dataPrimeiraVisitaStr = '• Cliente desde ' + dataVisita.toLocaleDateString('pt-BR');
+                }
+
+                div.innerHTML = `
+                    <div class="item-info">
+                        <h4>${c.nome}</h4>
+                        <p>${c.telefone || 'Sem telefone'} ${dataPrimeiraVisitaStr}</p>
+                    </div>`;
+                lista.appendChild(div);
+            });
+        }
+
+        function criarItemLista(item) {
+            const d = new Date(item.data);
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <div class="item-info">
+                    <h4>${getNomeCliente(item.clienteId)}</h4>
+                    <p>${item.servico} • ${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}</p>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    <div class="item-price">${formatCurrency(item.valor)}</div>
+                    <button class="btn-delete" onclick="deletarAtendimento('${item.id}')">×</button>
+                </div>`;
+            return div;
+        }
+
+        function renderizarGrafico() {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            const dias = [];
+            const valores = [];
+            
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(d.getDate() - i);
+                const dataStr = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                const dataIso = d.toLocaleDateString('en-CA');
+                
+                dias.push(dataStr);
+                const totalDia = atendimentos
+                    .filter(a => new Date(a.data).toLocaleDateString('en-CA') === dataIso)
+                    .reduce((acc, curr) => acc + curr.valor, 0);
+                valores.push(totalDia);
+            }
+
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'line', data: { labels: dias, datasets: [{
+                    label: 'Faturamento', data: valores, borderColor: '#C59A3B',
+                    backgroundColor: 'rgba(197, 154, 59, 0.1)', borderWidth: 2,
+                    tension: 0.4, fill: true, pointBackgroundColor: '#C59A3B'
+                }]},
+                options: { responsive: true, plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#333' }, ticks: { color: '#888' } },
+                        x: { grid: { display: false }, ticks: { color: '#888' } }
+                    }
+                }
+            });
+        }
+        
+        window.gerarRelatorio = (periodo) => {
+            let startDate = new Date();
+            let titulo = "";
+            const hoje = new Date();
+
+            if (periodo === 'dia') {
+                startDate.setHours(0, 0, 0, 0);
+                titulo = `Relatório Diário (${hoje.toLocaleDateString('pt-BR')})`;
+            } else if (periodo === 'semana') {
+                startDate.setDate(hoje.getDate() - hoje.getDay()); 
+                startDate.setHours(0, 0, 0, 0);
+                titulo = "Relatório Semanal";
+            } else if (periodo === 'mes') {
+                startDate.setDate(1); 
+                startDate.setHours(0, 0, 0, 0);
+                titulo = "Relatório Mensal";
+            }
+            
+            const atendimentosFiltrados = atendimentos.filter(a => new Date(a.data) >= startDate);
+            const clientesPrimeiraVisitaFiltrados = clientes.filter(c => {
+                if(!c.dataPrimeiraVisita) return false;
+                const dataVisita = (c.dataPrimeiraVisita.toDate ? c.dataPrimeiraVisita.toDate() : new Date(c.dataPrimeiraVisita));
+                return dataVisita >= startDate;
+            });
+
+            const faturamento = atendimentosFiltrados.reduce((acc, item) => acc + item.valor, 0);
+            const clientesAtendidosUnicos = new Set(atendimentosFiltrados.map(a => a.clienteId)).size;
+            const novosClientes = clientesPrimeiraVisitaFiltrados.length;
+            
+            document.getElementById('report-result').style.display = 'block';
+            document.getElementById('report-title').innerText = titulo;
+            document.getElementById('report-faturamento').innerHTML = `<span>Faturamento Total:</span> ${formatCurrency(faturamento)}`;
+            document.getElementById('report-clientes').innerHTML = `<span>Clientes Atendidos:</span> ${clientesAtendidosUnicos}`;
+            document.getElementById('report-novos').innerHTML = `<span>Novos Clientes:</span> ${novosClientes}`;
+        }
+        
+        function formatCurrency(value) {
+            return value.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+        }
+        
+    </script>
+</body>
+</html>
