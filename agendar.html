@@ -12,6 +12,7 @@
             --light-gray: #333333;
             --white: #FFFFFF;
             --text-gray: #CCCCCC;
+            --green: #4CAF50;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; outline: none; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--black); color: var(--white); -webkit-font-smoothing: antialiased; padding: 20px; }
@@ -25,7 +26,6 @@
         .form-control { width: 100%; padding: 15px; background: var(--black); border: 1px solid #444; color: var(--white); border-radius: 8px; font-size: 1rem; appearance: none; }
         .form-control:focus { border-color: var(--gold); }
 
-        /* Estilo para o Date Picker (iOS e Android) */
         .form-control[type="date"] { color-scheme: dark; }
         .form-control[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
@@ -33,10 +33,41 @@
         .btn-primary { background: var(--gold); color: var(--black); text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-primary:active { opacity: 0.8; }
         .btn-primary:disabled { background: var(--light-gray); cursor: not-allowed; }
+        .btn-secondary { background: var(--light-gray); color: var(--white); } /* Botão para Copiar PIX */
         
         #message { text-align: center; padding: 20px; border-radius: 8px; margin-top: 20px; display: none; font-weight: 500; }
-        #message.success { background: #4CAF50; color: white; }
+        #message.success { background: var(--green); color: white; }
         #message.error { background: #c12929; color: white; }
+
+        /* ==== NOVO: Estilo para a Seção PIX ==== */
+        #pix-section {
+            display: none; /* Começa escondido */
+            text-align: center;
+            border-top: 1px solid var(--light-gray);
+            margin-top: 25px;
+            padding-top: 25px;
+        }
+        #pix-section h4 {
+            font-size: 1.1rem;
+            color: var(--gold);
+            margin-bottom: 15px;
+        }
+        #pix-section p {
+            font-size: 0.9rem;
+            color: var(--text-gray);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        #pix-qr-code {
+            width: 180px;
+            height: 180px;
+            border-radius: 8px;
+            margin: 10px 0;
+            background: white; /* Fundo branco para QR code */
+            padding: 5px; /* Espaçamento do QR code */
+        }
+        /* ==== FIM DO NOVO ESTILO ==== */
+
     </style>
 </head>
 <body>
@@ -65,7 +96,6 @@
                 </select>
             </div>
             
-            <!-- ==== CAMPO DE HORA "CHEIA" ==== -->
             <div class="form-group">
                 <label>Data</label>
                 <input type="date" id="agenda-data" class="form-control" required>
@@ -86,12 +116,30 @@
                     <option value="18:00">18:00</option>
                 </select>
             </div>
-            <!-- ==== FIM DA MUDANÇA ==== -->
 
             <button type="button" class="btn btn-primary" id="btn-submit" onclick="handleAgendamento()">Confirmar Agendamento</button>
         </div>
         
         <div id="message"></div>
+
+        <!-- ==== NOVA SEÇÃO PIX ==== -->
+        <!-- (Input escondido para o Copia e Cola) -->
+        <input type="text" id="pix-key-input" value="SUA-CHAVE-PIX-AQUI" style="position:absolute; left: -9999px;">
+
+        <div id="pix-section">
+            <h4>Garanta seu horário!</h4>
+            <p>Para confirmar 100% a sua vaga, pague um sinal de 50% (ou valor total) via PIX e envie o comprovante para o nosso WhatsApp.</p>
+            
+            <!-- 
+                LEMBRE-SE: Suba a sua imagem de QR Code para o GitHub 
+                e nomeie-a "qrcode.png" (ou mude o nome aqui) 
+            -->
+            <img id="pix-qr-code" src="qrcode.png" alt="QR Code PIX" onerror="this.style.display='none'">
+            
+            <button type="button" class="btn btn-secondary" onclick="copyPix()">Copiar Chave PIX</button>
+        </div>
+        <!-- ==== FIM DA SEÇÃO PIX ==== -->
+
     </div>
 
     <script type="module">
@@ -102,7 +150,7 @@
             collection, 
             addDoc, 
             setDoc,
-            getDocs, // Importar getDocs
+            getDocs, 
             query, 
             where,
             Timestamp 
@@ -113,13 +161,12 @@
         // ===================================================================
         
         const firebaseConfig = {
-           apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
-  authDomain: "barbercontrol-6b1f1.firebaseapp.com",
-  projectId: "barbercontrol-6b1f1",
-  storageBucket: "barbercontrol-6b1f1.firebasestorage.app",
-  messagingSenderId: "984412023617",
-  appId: "1:984412023617:web:1b10bf21e1ec3a63bf0fc0",
-  measurementId: "G-JR9PJSCHWG"
+            apiKey: "COLE-SUA-NOVA-API-KEY-AQUI",
+            authDomain: "COLE-SEU-NOVO-AUTH-DOMAIN-AQUI",
+            projectId: "COLE-SEU-NOVO-PROJECT-ID-AQUI",
+            storageBucket: "COLE-SEU-NOVO-STORAGE-BUCKET-AQUI",
+            messagingSenderId: "COLE-SEU-NOVO-MESSAGING-SENDER-ID-AQUI",
+            appId: "COLE-SEU-NOVO-APP-ID-AQUI"
         };
         // ===================================================================
         
@@ -129,6 +176,7 @@
         const messageDiv = document.getElementById('message');
         const submitButton = document.getElementById('btn-submit');
         const form = document.getElementById('form-agendamento'); 
+        const pixSection = document.getElementById('pix-section'); // Puxa a seção PIX
 
         const urlParams = new URLSearchParams(window.location.search);
         const barbeiroId = urlParams.get('id');
@@ -144,6 +192,7 @@
             submitButton.disabled = true;
             submitButton.innerText = "Aguarde...";
             messageDiv.style.display = 'none'; 
+            pixSection.style.display = 'none'; // Esconde o PIX ao tentar de novo
 
             try {
                 const nome = document.getElementById('agenda-nome').value;
@@ -156,7 +205,6 @@
                     throw new Error("Por favor, preencha todos os campos.");
                 }
 
-                // Combina a data e a hora no formato ISO (local)
                 const dataHoraSelecionada = new Date(`${dataStr}T${horaStr}:00`);
                 const agora = new Date();
 
@@ -168,12 +216,9 @@
 
                 const agendaRef = collection(db, 'empresas', barbeiroId, 'agendamentos');
                 
-                // ==== CORREÇÃO "AGUARDE INFINITO" (Anti-Conflito) ====
-                // 1. Puxa TODOS os agendamentos pendentes (sem índice complexo)
                 const qPendente = query(agendaRef, where("status", "==", "pendente"));
                 const snapshotPendentes = await getDocs(qPendente);
 
-                // 2. Verifica no JavaScript (100% fiável) se o horário está ocupado
                 const horarioOcupado = snapshotPendentes.docs.find(doc => {
                     return doc.data().dataHora.toMillis() === dataHora.toMillis();
                 });
@@ -181,13 +226,9 @@
                 if (horarioOcupado) {
                     throw new Error("Desculpe, este horário exato já foi reservado. Por favor, escolha outro.");
                 }
-                // ==== FIM DA CORREÇÃO ====
 
-
-                // 3. Se passou, continua o código normal
                 const clienteId = await findOrCreateClient(barbeiroId, nome, telefone);
                 
-                // 4. Salva (agora com segurança)
                 await addDoc(agendaRef, {
                     clienteId: clienteId,
                     clienteNome: nome, 
@@ -196,12 +237,9 @@
                     status: 'pendente'
                 });
 
-                showMessage("success", "Horário marcado com sucesso! Até lá.");
-                document.getElementById('agenda-nome').value = '';
-                document.getElementById('agenda-telefone').value = '';
-                document.getElementById('agenda-servico').value = '';
-                document.getElementById('agenda-data').value = '';
-                document.getElementById('agenda-hora').value = '';
+                showMessage("success", "Horário marcado com sucesso! Veja abaixo como garantir sua vaga:");
+                pixSection.style.display = 'block'; // MOSTRA O PIX
+                form.reset(); // Limpa o formulário
 
             } catch (error) {
                 showMessage("error", error.message || "Erro ao marcar horário. Tente novamente.");
@@ -212,22 +250,16 @@
             }
         };
 
-        // ==== FUNÇÃO CORRIGIDA (À PROVA DE FALHAS) ====
-        // Esta é a função que você pediu, que cadastra o cliente se ele for novo
         async function findOrCreateClient(userId, nome, telefone) {
             const clientesRef = collection(db, 'empresas', userId, 'clientes');
             
-            // 1. Puxa TODOS os clientes (sem índice)
             const querySnapshot = await getDocs(clientesRef);
             
-            // 2. Filtra no JavaScript (100% fiável)
             const existingClient = querySnapshot.docs.find(doc => doc.data().telefone === telefone);
 
             if (existingClient) {
-                // Cliente já existe, retorna o ID
                 return existingClient.id;
             } else {
-                // Cliente não existe, cria um novo
                 const novoCliente = {
                     nome: nome,
                     telefone: telefone,
@@ -242,6 +274,20 @@
             messageDiv.className = type;
             messageDiv.innerText = text;
             messageDiv.style.display = 'block';
+        }
+
+        // ==== NOVA FUNÇÃO: Copiar PIX ====
+        window.copyPix = () => {
+            const pixInput = document.getElementById('pix-key-input');
+            pixInput.select();
+            pixInput.setSelectionRange(0, 99999); // Para mobile
+            
+            try {
+                document.execCommand('copy');
+                showMessage('success', 'Chave PIX copiada! Agora é só pagar no seu app do banco.');
+            } catch (err) {
+                showMessage('error', 'Não foi possível copiar. Tente manualmente.');
+            }
         }
 
     </script>
