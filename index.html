@@ -57,7 +57,6 @@
         .page { display: none; }
         .page.active { display: block; animation: fadeIn 0.3s; }
         
-        /* ==== FIX 1: ADICIONADO PADDING INFERIOR ÀS PÁGINAS ==== */
         #page-dashboard, #page-clients, #page-reports, #page-agenda {
             padding-bottom: 100px; 
         }
@@ -81,7 +80,6 @@
         .item-price { font-weight: 700; color: var(--gold); font-size: 1.1rem; }
         .btn-delete { background: none; border: none; color: #ff4444; font-size: 1.5rem; margin-left: 15px; cursor: pointer; padding: 0 5px; }
 
-        /* NOVO: Estilo para item da agenda */
         .agenda-item { 
             background: var(--dark-gray); 
             padding: 15px; 
@@ -94,7 +92,7 @@
             transition: background-color 0.2s;
         }
         .agenda-item:hover { background: var(--light-gray); }
-        .agenda-time { font-size: 1.1rem; font-weight: 700; color: var(--gold); min-width: 100px; /* Aumentado para data e hora */ }
+        .agenda-time { font-size: 1.1rem; font-weight: 700; color: var(--gold); min-width: 100px; }
         .agenda-info { flex: 1; margin: 0 10px; }
         .agenda-info h4 { font-size: 1rem; color: var(--white); }
         .agenda-info p { font-size: 0.9rem; color: var(--text-gray); }
@@ -112,15 +110,19 @@
         .form-group label { display: block; margin-bottom: 8px; color: var(--text-gray); font-size: 0.9rem; font-weight: 500; }
         .form-control { width: 100%; padding: 15px; background: var(--black); border: 1px solid #444; color: var(--white); border-radius: 8px; font-size: 1rem; appearance: none; }
         .form-control:focus { border-color: var(--gold); }
+        
+        /* Estilo para o Date Picker (iOS e Android) */
+        .form-control[type="date"] { color-scheme: dark; }
+        .form-control[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
+
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 10px; transition: opacity 0.2s; }
         .btn-primary { background: var(--gold); color: var(--black); text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-primary:active { opacity: 0.8; }
         .btn-secondary { background: var(--light-gray); color: var(--white); }
         .btn-cancel { background: transparent; color: var(--text-gray); margin-top: 15px; }
 
-        /* NOVO: CSS para 4 itens no menu */
         .nav-bottom { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--dark-gray); border-top: 1px solid var(--light-gray); display: flex; justify-content: space-around; padding: 10px 0; z-index: 90; }
-        .nav-item { color: var(--text-gray); font-size: 0.7rem; text-align: center; text-decoration: none; padding: 5px; background: none; border: none; cursor: pointer; flex: 1; } /* flex: 1 para dividir o espaço */
+        .nav-item { color: var(--text-gray); font-size: 0.7rem; text-align: center; text-decoration: none; padding: 5px; background: none; border: none; cursor: pointer; flex: 1; } 
         .nav-item.active { color: var(--gold); }
         .nav-item svg { width: 24px; height: 24px; display: block; margin: 0 auto 4px; }
         .nav-item path { fill: var(--text-gray); }
@@ -140,7 +142,6 @@
     <div id="auth-view">
         <div class="logo" style="text-align: center; margin-bottom: 30px;">Barber<span>Control</span></div>
         
-        <!-- ==== BUG CORRIGIDO: Removido 'onsubmit' do form e adicionado 'onclick' no botão ==== -->
         <div id="form-login" class="auth-form">
             <div class="form-group">
                 <label>Email</label>
@@ -191,7 +192,6 @@
                 <button class="btn btn-primary" onclick="abrirModalNovoCliente()">+ NOVO CLIENTE</button>
             </div>
             
-            <!-- ==== FIX 3: ADICIONADA BARRA DE BUSCA ==== -->
             <div style="padding: 20px;">
                 <input type="search" id="search-cliente" class="form-control" placeholder="Pesquisar cliente...">
             </div>
@@ -200,10 +200,15 @@
             <div class="list" id="lista-clientes"></div>
         </div>
         
-        <!-- ==== NOVA PÁGINA: AGENDA ==== -->
+        <!-- ==== PÁGINA DA AGENDA ATUALIZADA ==== -->
         <div id="page-agenda" class="page">
-            <!-- MUDANÇA: Título "Agenda do Dia" para "Agendamentos Pendentes (Hoje)" -->
-            <div class="section-title">Agendamentos Pendentes (Hoje)</div>
+            <!-- NOVO: Campo de Data -->
+            <div style="padding: 20px;">
+                <label for="agenda-datepicker" style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 8px; display:block;">Pesquisar Agenda por Data:</label>
+                <input type="date" id="agenda-datepicker" class="form-control">
+            </div>
+
+            <div class="section-title" id="agenda-title">Agendamentos</div>
             <div class="list" id="lista-agenda">
                 <!-- Agendamentos serão injetados aqui -->
             </div>
@@ -230,7 +235,6 @@
                 <svg viewBox="0 0 24 24"><path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z"></path></svg>
                 Dashboard
             </button>
-            <!-- NOVA ABA: AGENDA -->
             <button class="nav-item" onclick="showPage('page-agenda', this)">
                 <svg viewBox="0 0 24 24"><path d="M19,4H18V2H16V4H8V2H6V4H5C3.89,4 3,4.9 3,6V20C3,21.1 3.9,22 5,22H19C20.1,22 21,21.1 21,20V6C21,4.9 20.1,4 19,4M19,20H5V10H19V20M19,8H5V6H19V8M7,12H12V17H7V12Z"></path></svg>
                 Agenda
@@ -250,9 +254,7 @@
         <div class="modal" id="modal-atendimento">
             <div class="modal-content">
                 <div class="modal-header">Novo Atendimento</div>
-                <!-- ==== BUG CORRIGIDO: Removido 'onsubmit' ==== -->
                 <div>
-                    <!-- NOVO: Input escondido para guardar o ID do agendamento -->
                     <input type="hidden" id="agendamento-id">
                     
                     <div class="form-group"><label>Cliente</label><select class="form-control" id="cliente-select" required></select></div>
@@ -267,7 +269,6 @@
                         </select>
                     </div>
                     <div class="form-group"><label>Valor (R$)</label><input type="number" class="form-control" id="valor-input" placeholder="0.00" step="0.01" required inputmode="decimal"></div>
-                    <!-- ==== BUG CORRIGIDO: Adicionado 'onclick' e mudado type="button" ==== -->
                     <button type="button" class="btn btn-primary" onclick="salvarAtendimento()">CONFIRMAR E RECEBER</button>
                     <button type="button" class="btn btn-cancel" onclick="fecharModal('modal-atendimento')">Cancelar</button>
                 </div>
@@ -277,11 +278,9 @@
         <div class="modal" id="modal-cliente">
             <div class="modal-content">
                 <div class="modal-header">Novo Cliente</div>
-                <!-- ==== BUG CORRIGIDO: Removido 'onsubmit' ==== -->
                 <div>
                     <div class="form-group"><label>Nome do Cliente</label><input type="text" class="form-control" id="cliente-nome" placeholder="Ex: João Silva" required autocomplete="off"></div>
                     <div class="form-group"><label>Telefone (Opcional)</label><input type="tel" class="form-control" id="cliente-telefone" placeholder="(99) 99999-9999" autocomplete="off"></div>
-                    <!-- ==== BUG CORRIGIDO: Adicionado 'onclick' e mudado type="button" ==== -->
                     <button type="button" class="btn btn-primary" onclick="salvarNovoCliente()">SALVAR CLIENTE</button>
                     <button type="button" class="btn btn-cancel" onclick="fecharModal('modal-cliente')">Cancelar</button>
                 </div>
@@ -324,17 +323,16 @@
             query, 
             deleteDoc,
             Timestamp,
-            where // NOVO: Importar 'where' para filtrar
+            where 
         } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         
         // ===================================================================
         // <<< CUIDADO! CRIE UM NOVO PROJETO E COLE AS NOVAS CHAVES AQUI! >>>
-        // As suas chaves antigas estão comprometidas!
         // ===================================================================
         
         const firebaseConfig = {
-            apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
+          apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
   authDomain: "barbercontrol-6b1f1.firebaseapp.com",
   projectId: "barbercontrol-6b1f1",
   storageBucket: "barbercontrol-6b1f1.firebasestorage.app",
@@ -351,12 +349,12 @@
         let currentUserId = null; 
         let clientes = [];        
         let atendimentos = [];    
-        let agendamentos = []; // NOVO: Array para a agenda
+        let agendamentos = []; // Array GLOBAL para todos os agendamentos pendentes
         let myChart = null;
         let confirmCallback = null;
         let clientesListener = null;
         let atendimentosListener = null;
-        let agendamentosListener = null; // NOVO: Listener para a agenda
+        let agendamentosListener = null; 
 
         onAuthStateChanged(auth, (user) => {
             const authView = document.getElementById('auth-view');
@@ -374,14 +372,13 @@
                 
                 clientes = [];
                 atendimentos = [];
-                agendamentos = []; // NOVO
+                agendamentos = []; 
                 if (clientesListener) clientesListener();
                 if (atendimentosListener) atendimentosListener();
-                if (agendamentosListener) agendamentosListener(); // NOVO
+                if (agendamentosListener) agendamentosListener(); 
             }
         });
 
-        // ==== BUG CORRIGIDO: Removido 'e' da função ====
         window.handleLogin = async () => {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
@@ -411,14 +408,19 @@
         }
 
         function initApp() {
+            // Define o Datepicker para hoje
+            document.getElementById('agenda-datepicker').value = new Date().toLocaleDateString('en-CA');
+            
             showPage('page-dashboard', document.querySelector('.nav-item')); 
             
-            // ==== FIX 3: Adicionado listener para a busca ====
             document.getElementById('search-cliente').addEventListener('input', renderizarListaClientes);
+            // NOVO: Listener para o Datepicker
+            document.getElementById('agenda-datepicker').addEventListener('input', renderizarAgenda);
+
 
             if (clientesListener) clientesListener();
             if (atendimentosListener) atendimentosListener();
-            if (agendamentosListener) agendamentosListener(); // NOVO
+            if (agendamentosListener) agendamentosListener(); 
 
             // Listener de Clientes (sem mudança)
             const clientesRef = collection(db, 'empresas', currentUserId, 'clientes');
@@ -445,10 +447,11 @@
                 renderizarListaRecentes();
             });
 
-            // ==== NOVO LISTENER: AGENDAMENTOS ====
+            // ==== LISTENER DA AGENDA ATUALIZADO ====
+            // Agora, ele puxa TODOS os agendamentos pendentes (sem filtro de data)
             const agendaRef = collection(db, 'empresas', currentUserId, 'agendamentos');
-            // Filtra para mostrar apenas agendamentos pendentes
             const q = query(agendaRef, where("status", "==", "pendente"));
+            
             agendamentosListener = onSnapshot(q, (snapshot) => {
                 agendamentos = snapshot.docs.map(doc => {
                     const data = doc.data();
@@ -460,7 +463,15 @@
                     }
                 }).filter(Boolean);
                 
-                renderizarAgenda(); // Nova função para desenhar a agenda
+                // Renderiza a agenda (que vai usar o datepicker para filtrar)
+                renderizarAgenda(); 
+            }, (error) => {
+                console.error("Erro ao ouvir agendamentos: ", error);
+                if (error.code === 'failed-precondition') {
+                    // Este erro acontece se o índice composto (status, dataHora) não existir
+                    // MAS a nossa query nova (só por status) não precisa de índice.
+                    showAlert("Erro de base de dados. Recarregue a página.");
+                }
             });
         }
 
@@ -472,8 +483,13 @@
             navElement.classList.add('active');
             
             const fab = document.querySelector('.fab');
-            // Esconde o FAB na Agenda, Clientes e Relatórios
             fab.style.display = (pageId === 'page-dashboard') ? 'flex' : 'none';
+
+            // NOVO: Define o datepicker para hoje sempre que a aba da agenda for aberta
+            if (pageId === 'page-agenda') {
+                document.getElementById('agenda-datepicker').value = new Date().toLocaleDateString('en-CA');
+                renderizarAgenda(); // Força a renderização com a data de hoje
+            }
         }
 
         window.abrirModalAtendimento = () => {
@@ -482,11 +498,10 @@
                 return;
             }
             
-            // Limpa o formulário antes de abrir
             document.getElementById('cliente-select').value = '';
             document.getElementById('servico-select').value = 'Corte';
             document.getElementById('valor-input').value = '';
-            document.getElementById('agendamento-id').value = ''; // Limpa o ID escondido
+            document.getElementById('agendamento-id').value = ''; 
             
             popularSelectClientes();
             document.getElementById('modal-atendimento').classList.add('active');
@@ -499,7 +514,6 @@
 
         window.fecharModal = (modalId) => {
             document.getElementById(modalId).classList.remove('active');
-            // Limpa o ID escondido ao fechar o modal
             if (modalId === 'modal-atendimento') {
                  document.getElementById('agendamento-id').value = '';
             }
@@ -526,7 +540,6 @@
             };
         }
 
-        // ==== BUG CORRIGIDO: Removido 'e' da função ====
         window.salvarNovoCliente = async () => {
             const nome = document.getElementById('cliente-nome').value;
             const telefone = document.getElementById('cliente-telefone').value;
@@ -564,7 +577,6 @@
         function popularSelectClientes() {
             const select = document.getElementById('cliente-select');
             select.innerHTML = '<option value="" disabled selected>Selecione um cliente</option>';
-            // NOVO: Filtra clientes que podem não ter nome (embora agora seja obrigatório)
             const clientesValidos = clientes.filter(c => c.nome); 
             clientesValidos.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(c => {
                 select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
@@ -584,18 +596,15 @@
             }
         }
         
-        // ==== FUNÇÃO ATUALIZADA: SALVAR ATENDIMENTO ====
-        // ==== BUG CORRIGIDO: Removido 'e' da função ====
         window.salvarAtendimento = async () => {
             const clienteId = document.getElementById('cliente-select').value;
             const servico = document.getElementById('servico-select').value;
             const valor = parseFloat(document.getElementById('valor-input').value.replace(',', '.'));
             
-            // Pega o ID do agendamento (se houver)
             const agendamentoId = document.getElementById('agendamento-id').value;
             
             if (!clienteId) { showAlert("Selecione um cliente."); return; }
-            if (isNaN(valor) || valor < 0) { showAlert("Valor inválido."); return; } // Permite 0
+            if (isNaN(valor) || valor < 0) { showAlert("Valor inválido."); return; } 
 
             const novo = { 
                 clienteId: clienteId, 
@@ -605,18 +614,13 @@
             };
             
             try {
-                // Salva o novo atendimento
                 const atendRef = collection(db, 'empresas', currentUserId, 'atendimentos');
                 await addDoc(atendRef, novo);
 
-                // Regista a primeira visita (se for o caso)
                 await checkPrimeiraVisita(clienteId);
                 
-                // NOVO: Se isto veio de um agendamento, muda o status para 'atendido'
                 if (agendamentoId) {
                     const agendaDocRef = doc(db, 'empresas', currentUserId, 'agendamentos', agendamentoId);
-                    // Em vez de apagar, marcamos como atendido.
-                    // A lista da agenda só puxa "pendente", então ele vai sumir de lá.
                     await setDoc(agendaDocRef, { status: "atendido" }, { merge: true });
                 }
                 
@@ -638,39 +642,45 @@
             });
         }
 
-        // ==== FUNÇÃO CORRIGIDA: Renderizar a lista da Agenda ====
+        // ==== FUNÇÃO DA AGENDA ATUALIZADA (v10) ====
         function renderizarAgenda() {
             const lista = document.getElementById('lista-agenda');
             lista.innerHTML = '';
             
-            // ==== CORREÇÃO 1: FILTRAR APENAS PARA HOJE ====
-            const hojeStr = new Date().toLocaleDateString('en-CA'); // Formato YYYY-MM-DD
-            const agendamentosDeHoje = agendamentos.filter(a => 
-                new Date(a.dataHora).toLocaleDateString('en-CA') === hojeStr
+            // 1. Pega a data do calendário
+            const dataSelecionadaStr = document.getElementById('agenda-datepicker').value;
+            if (!dataSelecionadaStr) {
+                // Se não houver data (primeiro carregamento), define para hoje
+                document.getElementById('agenda-datepicker').value = new Date().toLocaleDateString('en-CA');
+                return; // O listener vai chamar esta função de novo
+            }
+
+            // 2. Filtra o array GLOBAL 'agendamentos'
+            const agendamentosFiltrados = agendamentos.filter(a => 
+                new Date(a.dataHora).toLocaleDateString('en-CA') === dataSelecionadaStr
             );
-            // (O listener do Firebase já filtra por status "pendente")
             
-            if (agendamentosDeHoje.length === 0) {
-                lista.innerHTML = '<div style="text-align:center; color:#666; padding:30px;">Nenhum horário pendente para hoje.</div>';
+            // 3. Atualiza o título
+            document.getElementById('agenda-title').innerText = `Agenda de ${formatarData(dataSelecionadaStr)}`;
+
+            if (agendamentosFiltrados.length === 0) {
+                lista.innerHTML = '<div style="text-align:center; color:#666; padding:30px;">Nenhum horário pendente para este dia.</div>';
                 return;
             }
             
-            // Ordena os agendamentos por data/hora
-            const ordenados = [...agendamentosDeHoje].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora));
+            // 4. Ordena e mostra
+            const ordenados = [...agendamentosFiltrados].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora));
             
             ordenados.forEach(item => {
                 const d = new Date(item.dataHora);
-                
-                // ==== CORREÇÃO 2: MOSTRAR DATA E HORA ====
-                // (Removido a data, pois o título da página já diz "Hoje")
                 const horaFormatada = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+                //const dataFormatada = d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
 
                 const div = document.createElement('div');
                 div.className = 'agenda-item';
-                div.onclick = () => converterAgendamento(item.id); // Ação de clique
+                div.onclick = () => converterAgendamento(item.id); 
                 
                 div.innerHTML = `
-                    <!-- MUDANÇA: Exibe apenas hora (pois já está filtrado por dia) -->
                     <span class="agenda-time">${horaFormatada}</span>
                     <div class="agenda-info" style="flex: 1; margin: 0 10px;">
                         <h4>${item.clienteNome}</h4>
@@ -682,17 +692,14 @@
             });
         }
 
-        // ==== NOVA FUNÇÃO: Converter Agendamento em Atendimento ====
         window.converterAgendamento = (id) => {
             const agendamento = agendamentos.find(a => a.id === id);
             if (!agendamento) return;
             
-            // Tenta encontrar o cliente pelo ID salvo no agendamento
             const cliente = clientes.find(c => c.id === agendamento.clienteId);
             
-            abrirModalAtendimento(); // Abre o modal limpo
+            abrirModalAtendimento(); 
             
-            // Preenche os dados
             if (cliente) {
                 document.getElementById('cliente-select').value = cliente.id;
             } else {
@@ -700,7 +707,7 @@
             }
             
             document.getElementById('servico-select').value = agendamento.servico;
-            document.getElementById('agendamento-id').value = agendamento.id; // Guarda o ID para apagar
+            document.getElementById('agendamento-id').value = agendamento.id; 
             document.getElementById('valor-input').focus();
         }
 
@@ -738,15 +745,12 @@
             });
         }
         
-        // ==== FIX 3: Função de renderizar lista agora usa o filtro de busca ====
         function renderizarListaClientes() {
             const lista = document.getElementById('lista-clientes');
             lista.innerHTML = '';
             
-            // Pega o termo da busca
             const termoBusca = document.getElementById('search-cliente').value.toLowerCase();
             
-            // Filtra os clientes
             const clientesFiltrados = clientes.filter(c => 
                 (c.nome && c.nome.toLowerCase().includes(termoBusca)) ||
                 (c.telefone && c.telefone.includes(termoBusca))
@@ -867,6 +871,12 @@
         
         function formatCurrency(value) {
             return value.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
+        }
+        
+        // NOVO: Helper para formatar data (ex: 13/11/2025)
+        function formatarData(isoDate) {
+            const [ano, mes, dia] = isoDate.split('-');
+            return `${dia}/${mes}/${ano}`;
         }
         
     </script>
