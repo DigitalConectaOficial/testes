@@ -94,7 +94,8 @@
             transition: background-color 0.2s;
         }
         .agenda-item:hover { background: var(--light-gray); }
-        .agenda-time { font-size: 1.1rem; font-weight: 700; color: var(--gold); min-width: 60px; }
+        .agenda-time { font-size: 1.1rem; font-weight: 700; color: var(--gold); min-width: 100px; /* Aumentado para data e hora */ }
+        .agenda-info { flex: 1; margin: 0 10px; }
         .agenda-info h4 { font-size: 1rem; color: var(--white); }
         .agenda-info p { font-size: 0.9rem; color: var(--text-gray); }
 
@@ -139,6 +140,7 @@
     <div id="auth-view">
         <div class="logo" style="text-align: center; margin-bottom: 30px;">Barber<span>Control</span></div>
         
+        <!-- ==== BUG CORRIGIDO: Removido 'onsubmit' do form e adicionado 'onclick' no botão ==== -->
         <div id="form-login" class="auth-form">
             <div class="form-group">
                 <label>Email</label>
@@ -189,6 +191,7 @@
                 <button class="btn btn-primary" onclick="abrirModalNovoCliente()">+ NOVO CLIENTE</button>
             </div>
             
+            <!-- ==== FIX 3: ADICIONADA BARRA DE BUSCA ==== -->
             <div style="padding: 20px;">
                 <input type="search" id="search-cliente" class="form-control" placeholder="Pesquisar cliente...">
             </div>
@@ -199,7 +202,8 @@
         
         <!-- ==== NOVA PÁGINA: AGENDA ==== -->
         <div id="page-agenda" class="page">
-            <div class="section-title">Agenda do Dia</div>
+            <!-- MUDANÇA: Título "Agenda do Dia" para "Agendamentos Pendentes (Hoje)" -->
+            <div class="section-title">Agendamentos Pendentes (Hoje)</div>
             <div class="list" id="lista-agenda">
                 <!-- Agendamentos serão injetados aqui -->
             </div>
@@ -246,6 +250,7 @@
         <div class="modal" id="modal-atendimento">
             <div class="modal-content">
                 <div class="modal-header">Novo Atendimento</div>
+                <!-- ==== BUG CORRIGIDO: Removido 'onsubmit' ==== -->
                 <div>
                     <!-- NOVO: Input escondido para guardar o ID do agendamento -->
                     <input type="hidden" id="agendamento-id">
@@ -262,6 +267,7 @@
                         </select>
                     </div>
                     <div class="form-group"><label>Valor (R$)</label><input type="number" class="form-control" id="valor-input" placeholder="0.00" step="0.01" required inputmode="decimal"></div>
+                    <!-- ==== BUG CORRIGIDO: Adicionado 'onclick' e mudado type="button" ==== -->
                     <button type="button" class="btn btn-primary" onclick="salvarAtendimento()">CONFIRMAR E RECEBER</button>
                     <button type="button" class="btn btn-cancel" onclick="fecharModal('modal-atendimento')">Cancelar</button>
                 </div>
@@ -271,9 +277,11 @@
         <div class="modal" id="modal-cliente">
             <div class="modal-content">
                 <div class="modal-header">Novo Cliente</div>
+                <!-- ==== BUG CORRIGIDO: Removido 'onsubmit' ==== -->
                 <div>
                     <div class="form-group"><label>Nome do Cliente</label><input type="text" class="form-control" id="cliente-nome" placeholder="Ex: João Silva" required autocomplete="off"></div>
                     <div class="form-group"><label>Telefone (Opcional)</label><input type="tel" class="form-control" id="cliente-telefone" placeholder="(99) 99999-9999" autocomplete="off"></div>
+                    <!-- ==== BUG CORRIGIDO: Adicionado 'onclick' e mudado type="button" ==== -->
                     <button type="button" class="btn btn-primary" onclick="salvarNovoCliente()">SALVAR CLIENTE</button>
                     <button type="button" class="btn btn-cancel" onclick="fecharModal('modal-cliente')">Cancelar</button>
                 </div>
@@ -326,8 +334,7 @@
         // ===================================================================
         
         const firebaseConfig = {
-           
-  apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
+            apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
   authDomain: "barbercontrol-6b1f1.firebaseapp.com",
   projectId: "barbercontrol-6b1f1",
   storageBucket: "barbercontrol-6b1f1.firebasestorage.app",
@@ -374,6 +381,7 @@
             }
         });
 
+        // ==== BUG CORRIGIDO: Removido 'e' da função ====
         window.handleLogin = async () => {
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
@@ -405,6 +413,7 @@
         function initApp() {
             showPage('page-dashboard', document.querySelector('.nav-item')); 
             
+            // ==== FIX 3: Adicionado listener para a busca ====
             document.getElementById('search-cliente').addEventListener('input', renderizarListaClientes);
 
             if (clientesListener) clientesListener();
@@ -517,9 +526,15 @@
             };
         }
 
+        // ==== BUG CORRIGIDO: Removido 'e' da função ====
         window.salvarNovoCliente = async () => {
             const nome = document.getElementById('cliente-nome').value;
             const telefone = document.getElementById('cliente-telefone').value;
+
+            if (!nome.trim()) {
+                showAlert("O nome do cliente é obrigatório.");
+                return;
+            }
 
             if (clientes.find(c => c.nome.toLowerCase() === nome.toLowerCase())) {
                 showAlert("Já existe um cliente com esse nome."); 
@@ -549,7 +564,9 @@
         function popularSelectClientes() {
             const select = document.getElementById('cliente-select');
             select.innerHTML = '<option value="" disabled selected>Selecione um cliente</option>';
-            clientes.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(c => {
+            // NOVO: Filtra clientes que podem não ter nome (embora agora seja obrigatório)
+            const clientesValidos = clientes.filter(c => c.nome); 
+            clientesValidos.sort((a, b) => a.nome.localeCompare(b.nome)).forEach(c => {
                 select.innerHTML += `<option value="${c.id}">${c.nome}</option>`;
             });
         }
@@ -568,6 +585,7 @@
         }
         
         // ==== FUNÇÃO ATUALIZADA: SALVAR ATENDIMENTO ====
+        // ==== BUG CORRIGIDO: Removido 'e' da função ====
         window.salvarAtendimento = async () => {
             const clienteId = document.getElementById('cliente-select').value;
             const servico = document.getElementById('servico-select').value;
@@ -577,7 +595,7 @@
             const agendamentoId = document.getElementById('agendamento-id').value;
             
             if (!clienteId) { showAlert("Selecione um cliente."); return; }
-            if (isNaN(valor) || valor <= 0) { showAlert("Valor inválido."); return; }
+            if (isNaN(valor) || valor < 0) { showAlert("Valor inválido."); return; } // Permite 0
 
             const novo = { 
                 clienteId: clienteId, 
@@ -594,10 +612,12 @@
                 // Regista a primeira visita (se for o caso)
                 await checkPrimeiraVisita(clienteId);
                 
-                // NOVO: Se isto veio de um agendamento, apaga o agendamento
+                // NOVO: Se isto veio de um agendamento, muda o status para 'atendido'
                 if (agendamentoId) {
                     const agendaDocRef = doc(db, 'empresas', currentUserId, 'agendamentos', agendamentoId);
-                    await deleteDoc(agendaDocRef);
+                    // Em vez de apagar, marcamos como atendido.
+                    // A lista da agenda só puxa "pendente", então ele vai sumir de lá.
+                    await setDoc(agendaDocRef, { status: "atendido" }, { merge: true });
                 }
                 
                 fecharModal('modal-atendimento');
@@ -618,29 +638,42 @@
             });
         }
 
-        // ==== NOVA FUNÇÃO: Renderizar a lista da Agenda ====
+        // ==== FUNÇÃO CORRIGIDA: Renderizar a lista da Agenda ====
         function renderizarAgenda() {
             const lista = document.getElementById('lista-agenda');
             lista.innerHTML = '';
             
-            if (agendamentos.length === 0) {
-                lista.innerHTML = '<div style="text-align:center; color:#666; padding:30px;">Nenhum horário marcado.</div>';
+            // ==== CORREÇÃO 1: FILTRAR APENAS PARA HOJE ====
+            const hojeStr = new Date().toLocaleDateString('en-CA'); // Formato YYYY-MM-DD
+            const agendamentosDeHoje = agendamentos.filter(a => 
+                new Date(a.dataHora).toLocaleDateString('en-CA') === hojeStr
+            );
+            // (O listener do Firebase já filtra por status "pendente")
+            
+            if (agendamentosDeHoje.length === 0) {
+                lista.innerHTML = '<div style="text-align:center; color:#666; padding:30px;">Nenhum horário pendente para hoje.</div>';
                 return;
             }
             
             // Ordena os agendamentos por data/hora
-            const ordenados = [...agendamentos].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora));
+            const ordenados = [...agendamentosDeHoje].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora));
             
             ordenados.forEach(item => {
                 const d = new Date(item.dataHora);
+                
+                // ==== CORREÇÃO 2: MOSTRAR DATA E HORA ====
+                // (Removido a data, pois o título da página já diz "Hoje")
+                const horaFormatada = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+
                 const div = document.createElement('div');
                 div.className = 'agenda-item';
                 div.onclick = () => converterAgendamento(item.id); // Ação de clique
                 
                 div.innerHTML = `
-                    <span class="agenda-time">${d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'})}</span>
+                    <!-- MUDANÇA: Exibe apenas hora (pois já está filtrado por dia) -->
+                    <span class="agenda-time">${horaFormatada}</span>
                     <div class="agenda-info" style="flex: 1; margin: 0 10px;">
-                        <h4>${item.clienteNome}</h4> <!-- Assumindo que agendar.html salva 'clienteNome' -->
+                        <h4>${item.clienteNome}</h4>
                         <p>${item.servico}</p>
                     </div>
                     <span style="font-size: 1.2rem;">&rsaquo;</span>
@@ -654,9 +687,8 @@
             const agendamento = agendamentos.find(a => a.id === id);
             if (!agendamento) return;
             
-            // Tenta encontrar o cliente pelo nome salvo no agendamento
-            // Nota: Se a página agendar.html salvar o clienteId, isto fica mais fácil
-            const cliente = clientes.find(c => c.nome.toLowerCase() === agendamento.clienteNome.toLowerCase());
+            // Tenta encontrar o cliente pelo ID salvo no agendamento
+            const cliente = clientes.find(c => c.id === agendamento.clienteId);
             
             abrirModalAtendimento(); // Abre o modal limpo
             
@@ -664,7 +696,6 @@
             if (cliente) {
                 document.getElementById('cliente-select').value = cliente.id;
             } else {
-                // Se não achar o cliente (ex: nome escrito diferente), não seleciona
                 showAlert(`Cliente "${agendamento.clienteNome}" não encontrado no cadastro. Selecione manualmente.`);
             }
             
@@ -707,13 +738,17 @@
             });
         }
         
+        // ==== FIX 3: Função de renderizar lista agora usa o filtro de busca ====
         function renderizarListaClientes() {
             const lista = document.getElementById('lista-clientes');
             lista.innerHTML = '';
             
+            // Pega o termo da busca
             const termoBusca = document.getElementById('search-cliente').value.toLowerCase();
+            
+            // Filtra os clientes
             const clientesFiltrados = clientes.filter(c => 
-                c.nome.toLowerCase().includes(termoBusca) ||
+                (c.nome && c.nome.toLowerCase().includes(termoBusca)) ||
                 (c.telefone && c.telefone.includes(termoBusca))
             );
 
