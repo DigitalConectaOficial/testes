@@ -33,15 +33,14 @@
         .btn-primary { background: var(--gold); color: var(--black); text-transform: uppercase; letter-spacing: 0.5px; }
         .btn-primary:active { opacity: 0.8; }
         .btn-primary:disabled { background: var(--light-gray); cursor: not-allowed; }
-        .btn-secondary { background: var(--light-gray); color: var(--white); } /* Botão para Copiar PIX */
+        .btn-secondary { background: var(--light-gray); color: var(--white); } 
         
         #message { text-align: center; padding: 20px; border-radius: 8px; margin-top: 20px; display: none; font-weight: 500; }
         #message.success { background: var(--green); color: white; }
         #message.error { background: #c12929; color: white; }
 
-        /* ==== NOVO: Estilo para a Seção PIX ==== */
         #pix-section {
-            display: none; /* Começa escondido */
+            display: none; 
             text-align: center;
             border-top: 1px solid var(--light-gray);
             margin-top: 25px;
@@ -63,10 +62,9 @@
             height: 180px;
             border-radius: 8px;
             margin: 10px 0;
-            background: white; /* Fundo branco para QR code */
-            padding: 5px; /* Espaçamento do QR code */
+            background: white; 
+            padding: 5px; 
         }
-        /* ==== FIM DO NOVO ESTILO ==== */
 
     </style>
 </head>
@@ -122,23 +120,16 @@
         
         <div id="message"></div>
 
-        <!-- ==== NOVA SEÇÃO PIX ==== -->
-        <!-- (Input escondido para o Copia e Cola) -->
         <input type="text" id="pix-key-input" value="SUA-CHAVE-PIX-AQUI" style="position:absolute; left: -9999px;">
 
         <div id="pix-section">
             <h4>Garanta seu horário!</h4>
             <p>Para confirmar 100% a sua vaga, pague um sinal de 50% (ou valor total) via PIX e envie o comprovante para o nosso WhatsApp.</p>
             
-            <!-- 
-                LEMBRE-SE: Suba a sua imagem de QR Code para o GitHub 
-                e nomeie-a "qrcode.png" (ou mude o nome aqui) 
-            -->
             <img id="pix-qr-code" src="qrcode.png" alt="QR Code PIX" onerror="this.style.display='none'">
             
             <button type="button" class="btn btn-secondary" onclick="copyPix()">Copiar Chave PIX</button>
         </div>
-        <!-- ==== FIM DA SEÇÃO PIX ==== -->
 
     </div>
 
@@ -161,7 +152,7 @@
         // ===================================================================
         
         const firebaseConfig = {
-             apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
+            apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
   authDomain: "barbercontrol-6b1f1.firebaseapp.com",
   projectId: "barbercontrol-6b1f1",
   storageBucket: "barbercontrol-6b1f1.firebasestorage.app",
@@ -177,7 +168,7 @@
         const messageDiv = document.getElementById('message');
         const submitButton = document.getElementById('btn-submit');
         const form = document.getElementById('form-agendamento'); 
-        const pixSection = document.getElementById('pix-section'); // Puxa a seção PIX
+        const pixSection = document.getElementById('pix-section'); 
 
         const urlParams = new URLSearchParams(window.location.search);
         const barbeiroId = urlParams.get('id');
@@ -193,7 +184,7 @@
             submitButton.disabled = true;
             submitButton.innerText = "Aguarde...";
             messageDiv.style.display = 'none'; 
-            pixSection.style.display = 'none'; // Esconde o PIX ao tentar de novo
+            pixSection.style.display = 'none'; 
 
             try {
                 const nome = document.getElementById('agenda-nome').value;
@@ -238,9 +229,18 @@
                     status: 'pendente'
                 });
 
-                showMessage("success", "Horário marcado com sucesso! Veja abaixo como garantir sua vaga:");
+                // ==== CORREÇÃO 2: MENSAGEM DE SUCESSO MUDADA ====
+                showMessage("success", "SIGA O PASSO ABAIXO PARA CONFIRMAR SEU AGENDAMENTO");
                 pixSection.style.display = 'block'; // MOSTRA O PIX
-                form.reset(); // Limpa o formulário
+                
+                // ==== CORREÇÃO 1: BUG DO `form.reset()` ====
+                // Limpa o formulário manualmente
+                document.getElementById('agenda-nome').value = '';
+                document.getElementById('agenda-telefone').value = '';
+                document.getElementById('agenda-servico').value = '';
+                document.getElementById('agenda-data').value = '';
+                document.getElementById('agenda-hora').value = '';
+                // ==== FIM DA CORREÇÃO 1 ====
 
             } catch (error) {
                 showMessage("error", error.message || "Erro ao marcar horário. Tente novamente.");
@@ -277,14 +277,14 @@
             messageDiv.style.display = 'block';
         }
 
-        // ==== NOVA FUNÇÃO: Copiar PIX ====
         window.copyPix = () => {
             const pixInput = document.getElementById('pix-key-input');
             pixInput.select();
-            pixInput.setSelectionRange(0, 99999); // Para mobile
+            pixInput.setSelectionRange(0, 99999); 
             
             try {
                 document.execCommand('copy');
+                // Mostra a mensagem de sucesso no *mesmo* sítio
                 showMessage('success', 'Chave PIX copiada! Agora é só pagar no seu app do banco.');
             } catch (err) {
                 showMessage('error', 'Não foi possível copiar. Tente manualmente.');
@@ -294,4 +294,3 @@
     </script>
 </body>
 </html>
-
