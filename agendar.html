@@ -1,76 +1,76 @@
-!DOCTYPE html
-html lang=pt-BR
-head
-    meta charset=UTF-8
-    meta name=viewport content=width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no
-    titleMarcar Horáriotitle
-    style
-        root {
-            --gold #C59A3B; 
-            --black #111111;
-            --dark-gray #1A1A1A;
-            --light-gray #333333;
-            --white #FFFFFF;
-            --text-gray #CCCCCC;
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Marcar Horário</title>
+    <style>
+        :root {
+            --gold: #C59A3B; 
+            --black: #111111;
+            --dark-gray: #1A1A1A;
+            --light-gray: #333333;
+            --white: #FFFFFF;
+            --text-gray: #CCCCCC;
         }
-         { box-sizing border-box; margin 0; padding 0; font-family -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif; outline none; -webkit-tap-highlight-color transparent; }
-        body { background-color var(--black); color var(--white); -webkit-font-smoothing antialiased; padding 20px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; outline: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--black); color: var(--white); -webkit-font-smoothing: antialiased; padding: 20px; }
         
-        .container { max-width 500px; margin 20px auto; background var(--dark-gray); border-radius 12px; padding 30px; border 1px solid var(--light-gray); }
-        .logo { font-weight 800; font-size 1.5rem; color var(--white); letter-spacing 1px; text-align center; margin-bottom 30px; }
-        .logo span { color var(--gold); }
+        .container { max-width: 500px; margin: 20px auto; background: var(--dark-gray); border-radius: 12px; padding: 30px; border: 1px solid var(--light-gray); }
+        .logo { font-weight: 800; font-size: 1.5rem; color: var(--white); letter-spacing: 1px; text-align: center; margin-bottom: 30px; }
+        .logo span { color: var(--gold); }
         
-        .form-group { margin-bottom 20px; }
-        .form-group label { display block; margin-bottom 8px; color var(--text-gray); font-size 0.9rem; font-weight 500; }
-        .form-control { width 100%; padding 15px; background var(--black); border 1px solid #444; color var(--white); border-radius 8px; font-size 1rem; appearance none; }
-        .form-controlfocus { border-color var(--gold); }
-        .btn { width 100%; padding 16px; border none; border-radius 8px; font-size 1rem; font-weight 700; cursor pointer; margin-top 10px; transition opacity 0.2s; }
-        .btn-primary { background var(--gold); color var(--black); text-transform uppercase; letter-spacing 0.5px; }
-        .btn-primaryactive { opacity 0.8; }
-        .btn-primarydisabled { background var(--light-gray); cursor not-allowed; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; color: var(--text-gray); font-size: 0.9rem; font-weight: 500; }
+        .form-control { width: 100%; padding: 15px; background: var(--black); border: 1px solid #444; color: var(--white); border-radius: 8px; font-size: 1rem; appearance: none; }
+        .form-control:focus { border-color: var(--gold); }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 10px; transition: opacity 0.2s; }
+        .btn-primary { background: var(--gold); color: var(--black); text-transform: uppercase; letter-spacing: 0.5px; }
+        .btn-primary:active { opacity: 0.8; }
+        .btn-primary:disabled { background: var(--light-gray); cursor: not-allowed; }
         
-        #message { text-align center; padding 20px; border-radius 8px; margin-top 20px; display none; }
-        #message.success { background #4CAF50; color white; }
-        #message.error { background #E91E63; color white; }
-    style
-head
-body
+        #message { text-align: center; padding: 20px; border-radius: 8px; margin-top: 20px; display: none; }
+        #message.success { background: #4CAF50; color: white; }
+        #message.error { background: #E91E63; color: white; }
+    </style>
+</head>
+<body>
 
-    div class=container
-        div class=logoMarcar Horário spanBarberControlspandiv
+    <div class="container">
+        <div class="logo">Marcar Horário <span>BarberControl</span></div>
         
-        form id=form-agendamento
-            div class=form-group
-                labelSeu Nomelabel
-                input type=text id=agenda-nome class=form-control placeholder=Seu nome completo required
-            div
-            div class=form-group
-                labelSeu Telefonelabel
-                input type=tel id=agenda-telefone class=form-control placeholder=(99) 99999-9999 required
-            div
-            div class=form-group
-                labelServiçolabel
-                select class=form-control id=agenda-servico required
-                    option value= disabled selectedEscolha um serviço...option
-                    option value=CorteCorte de Cabelooption
-                    option value=BarbaBarbaoption
-                    option value=Cabelo + BarbaCabelo + Barbaoption
-                    option value=SobrancelhaSobrancelhaoption
-                    option value=PezinhoPezinhooption
-                select
-            div
-            div class=form-group
-                labelData e Horalabel
-                input type=datetime-local id=agenda-datahora class=form-control required
-            div
-            button type=submit class=btn btn-primary id=btn-submitConfirmar Agendamentobutton
-        form
+        <form id="form-agendamento">
+            <div class="form-group">
+                <label>Seu Nome</label>
+                <input type="text" id="agenda-nome" class="form-control" placeholder="Seu nome completo" required>
+            </div>
+            <div class="form-group">
+                <label>Seu Telefone</label>
+                <input type="tel" id="agenda-telefone" class="form-control" placeholder="(99) 99999-9999" required>
+            </div>
+            <div class="form-group">
+                <label>Serviço</label>
+                <select class="form-control" id="agenda-servico" required>
+                    <option value="" disabled selected>Escolha um serviço...</option>
+                    <option value="Corte">Corte de Cabelo</option>
+                    <option value="Barba">Barba</option>
+                    <option value="Cabelo + Barba">Cabelo + Barba</option>
+                    <option value="Sobrancelha">Sobrancelha</option>
+                    <option value="Pezinho">Pezinho</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Data e Hora</label>
+                <input type="datetime-local" id="agenda-datahora" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary" id="btn-submit">Confirmar Agendamento</button>
+        </form>
         
-        div id=messagediv
-    div
+        <div id="message"></div>
+    </div>
 
-    script type=module
-        import { initializeApp } from httpswww.gstatic.comfirebasejs10.12.2firebase-app.js;
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { 
             getFirestore, 
             doc, 
@@ -81,23 +81,22 @@ body
             query, 
             where,
             Timestamp 
-        } from httpswww.gstatic.comfirebasejs10.12.2firebase-firestore.js;
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-         ===================================================================
-          CUIDADO! CRIE UM NOVO PROJETO E COLE AS NOVAS CHAVES AQUI! 
-         As suas chaves antigas estão comprometidas!
-         ===================================================================
+        // ===================================================================
+        // <<< CUIDADO! CRIE UM NOVO PROJETO E COLE AS NOVAS CHAVES AQUI! >>>
+        // As suas chaves antigas estão comprometidas!
+        // ===================================================================
         
         const firebaseConfig = {
-            apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
-  authDomain: "barbercontrol-6b1f1.firebaseapp.com",
-  projectId: "barbercontrol-6b1f1",
-  storageBucket: "barbercontrol-6b1f1.firebasestorage.app",
-  messagingSenderId: "984412023617",
-  appId: "1:984412023617:web:1b10bf21e1ec3a63bf0fc0",
-  measurementId: "G-JR9PJSCHWG"
+            apiKey: "COLE-SUA-NOVA-API-KEY-AQUI",
+            authDomain: "COLE-SEU-NOVO-AUTH-DOMAIN-AQUI",
+            projectId: "COLE-SEU-NOVO-PROJECT-ID-AQUI",
+            storageBucket: "COLE-SEU-NOVO-STORAGE-BUCKET-AQUI",
+            messagingSenderId: "COLE-SEU-NOVO-MESSAGING-SENDER-ID-AQUI",
+            appId: "COLE-SEU-NOVO-APP-ID-AQUI"
         };
-         ===================================================================
+        // ===================================================================
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -106,22 +105,22 @@ body
         const messageDiv = document.getElementById('message');
         const submitButton = document.getElementById('btn-submit');
 
-         Pega o ID do barbeiro pela URL
-         O link deve ser ...agendar.htmlid=USER_ID_DO_BARBEIRO
+        // Pega o ID do barbeiro pela URL
+        // O link deve ser: .../agendar.html?id=USER_ID_DO_BARBEIRO
         const urlParams = new URLSearchParams(window.location.search);
         const barbeiroId = urlParams.get('id');
 
         if (!barbeiroId) {
-            showMessage(error, Link de agendamento inválido. Fale com a barbearia.);
+            showMessage("error", "Link de agendamento inválido. Fale com a barbearia.");
             form.style.display = 'none';
         }
 
-        form.addEventListener('submit', async (e) = {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
             if (!barbeiroId) return;
 
             submitButton.disabled = true;
-            submitButton.innerText = Aguarde...;
+            submitButton.innerText = "Aguarde...";
 
             try {
                 const nome = document.getElementById('agenda-nome').value;
@@ -131,47 +130,47 @@ body
                 
                 const dataHora = Timestamp.fromDate(new Date(dataHoraStr));
 
-                 1. Encontra ou Cria o Cliente na base daquele barbeiro
+                // 1. Encontra ou Cria o Cliente na base daquele barbeiro
                 const clienteId = await findOrCreateClient(barbeiroId, nome, telefone);
 
-                 2. Salva o Agendamento
+                // 2. Salva o Agendamento
                 const agendaRef = collection(db, 'empresas', barbeiroId, 'agendamentos');
                 await addDoc(agendaRef, {
-                    clienteId clienteId,
-                    clienteNome nome,  Salva o nome para fácil acesso na agenda
-                    servico servico,
-                    dataHora dataHora,
-                    status 'pendente'
+                    clienteId: clienteId,
+                    clienteNome: nome, // Salva o nome para fácil acesso na agenda
+                    servico: servico,
+                    dataHora: dataHora,
+                    status: 'pendente'
                 });
 
-                showMessage(success, Horário marcado com sucesso! Até lá.);
+                showMessage("success", "Horário marcado com sucesso! Até lá.");
                 form.reset();
 
             } catch (error) {
-                showMessage(error, Erro ao marcar horário. Tente novamente.);
-                console.error(Erro , error);
+                showMessage("error", "Erro ao marcar horário. Tente novamente.");
+                console.error("Erro: ", error);
             } finally {
                 submitButton.disabled = false;
-                submitButton.innerText = Confirmar Agendamento;
+                submitButton.innerText = "Confirmar Agendamento";
             }
         });
 
         async function findOrCreateClient(userId, nome, telefone) {
             const clientesRef = collection(db, 'empresas', userId, 'clientes');
             
-             Procura pelo telefone (mais único que o nome)
-            const q = query(clientesRef, where(telefone, ==, telefone));
+            // Procura pelo telefone (mais único que o nome)
+            const q = query(clientesRef, where("telefone", "==", telefone));
             const querySnapshot = await getDocs(q);
             
             if (!querySnapshot.empty) {
-                 Cliente já existe, retorna o ID
+                // Cliente já existe, retorna o ID
                 return querySnapshot.docs[0].id;
             } else {
-                 Cliente não existe, cria um novo
+                // Cliente não existe, cria um novo
                 const novoCliente = {
-                    nome nome,
-                    telefone telefone,
-                    dataPrimeiraVisita null  O app principal vai preencher isto
+                    nome: nome,
+                    telefone: telefone,
+                    dataPrimeiraVisita: null // O app principal vai preencher isto
                 };
                 const docRef = await addDoc(clientesRef, novoCliente);
                 return docRef.id;
@@ -184,6 +183,6 @@ body
             messageDiv.style.display = 'block';
         }
 
-    script
-body
-html
+    </script>
+</body>
+</html>
