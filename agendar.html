@@ -25,14 +25,9 @@
         .form-control { width: 100%; padding: 15px; background: var(--black); border: 1px solid #444; color: var(--white); border-radius: 8px; font-size: 1rem; appearance: none; }
         .form-control:focus { border-color: var(--gold); }
 
-        /* Estilos para o Date Picker em modo escuro */
-        .form-control[type="date"] {
-            color-scheme: dark;
-        }
-        .form-control[type="date"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
-            cursor: pointer;
-        }
+        /* Estilo para o Date Picker (iOS e Android) */
+        .form-control[type="date"] { color-scheme: dark; }
+        .form-control[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
         .btn { width: 100%; padding: 16px; border: none; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 10px; transition: opacity 0.2s; }
         .btn-primary { background: var(--gold); color: var(--black); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -70,7 +65,7 @@
                 </select>
             </div>
             
-            <!-- ==== CAMPO DE HORA MUDADO ==== -->
+            <!-- ==== CAMPO DE HORA "CHEIA" ==== -->
             <div class="form-group">
                 <label>Data</label>
                 <input type="date" id="agenda-data" class="form-control" required>
@@ -107,7 +102,7 @@
             collection, 
             addDoc, 
             setDoc,
-            getDocs, 
+            getDocs, // Importar getDocs
             query, 
             where,
             Timestamp 
@@ -153,10 +148,8 @@
                 const nome = document.getElementById('agenda-nome').value;
                 const telefone = document.getElementById('agenda-telefone').value;
                 const servico = document.getElementById('agenda-servico').value;
-                
-                // ==== LÓGICA DE DATA/HORA MUDADA ====
-                const dataStr = document.getElementById('agenda-data').value; // Ex: "2025-11-14"
-                const horaStr = document.getElementById('agenda-hora').value; // Ex: "09:00"
+                const dataStr = document.getElementById('agenda-data').value;
+                const horaStr = document.getElementById('agenda-hora').value;
                 
                 if (!nome || !telefone || !servico || !dataStr || !horaStr) {
                     throw new Error("Por favor, preencha todos os campos.");
@@ -164,8 +157,6 @@
 
                 // Combina a data e a hora no formato ISO (local)
                 const dataHoraSelecionada = new Date(`${dataStr}T${horaStr}:00`);
-                // ==== FIM DA MUDANÇA ====
-
                 const agora = new Date();
 
                 if (dataHoraSelecionada < agora) {
@@ -176,18 +167,26 @@
 
                 const agendaRef = collection(db, 'empresas', barbeiroId, 'agendamentos');
                 
-                const q = query(agendaRef, 
-                    where("dataHora", "==", dataHora),
-                    where("status", "==", "pendente") 
-                );
-                const querySnapshot = await getDocs(q);
+                // ==== CORREÇÃO "AGUARDE INFINITO" (Anti-Conflito) ====
+                // 1. Puxa TODOS os agendamentos pendentes (sem índice complexo)
+                const qPendente = query(agendaRef, where("status", "==", "pendente"));
+                const snapshotPendentes = await getDocs(qPendente);
 
-                if (!querySnapshot.empty) {
+                // 2. Verifica no JavaScript (100% fiável) se o horário está ocupado
+                const horarioOcupado = snapshotPendentes.docs.find(doc => {
+                    return doc.data().dataHora.toMillis() === dataHora.toMillis();
+                });
+
+                if (horarioOcupado) {
                     throw new Error("Desculpe, este horário exato já foi reservado. Por favor, escolha outro.");
                 }
+                // ==== FIM DA CORREÇÃO ====
 
+
+                // 3. Se passou, continua o código normal
                 const clienteId = await findOrCreateClient(barbeiroId, nome, telefone);
                 
+                // 4. Salva (agora com segurança)
                 await addDoc(agendaRef, {
                     clienteId: clienteId,
                     clienteNome: nome, 
@@ -200,8 +199,8 @@
                 document.getElementById('agenda-nome').value = '';
                 document.getElementById('agenda-telefone').value = '';
                 document.getElementById('agenda-servico').value = '';
-                document.getElementById('agenda-data').value = ''; // Limpa campo de data
-                document.getElementById('agenda-hora').value = ''; // Limpa campo de hora
+                document.getElementById('agenda-data').value = '';
+                document.getElementById('agenda-hora').value = '';
 
             } catch (error) {
                 showMessage("error", error.message || "Erro ao marcar horário. Tente novamente.");
@@ -212,16 +211,22 @@
             }
         };
 
+        // ==== FUNÇÃO CORRIGIDA (À PROVA DE FALHAS) ====
+        // Esta é a função que você pediu, que cadastra o cliente se ele for novo
         async function findOrCreateClient(userId, nome, telefone) {
             const clientesRef = collection(db, 'empresas', userId, 'clientes');
             
+            // 1. Puxa TODOS os clientes (sem índice)
             const querySnapshot = await getDocs(clientesRef);
             
+            // 2. Filtra no JavaScript (100% fiável)
             const existingClient = querySnapshot.docs.find(doc => doc.data().telefone === telefone);
 
             if (existingClient) {
+                // Cliente já existe, retorna o ID
                 return existingClient.id;
             } else {
+                // Cliente não existe, cria um novo
                 const novoCliente = {
                     nome: nome,
                     telefone: telefone,
