@@ -29,9 +29,9 @@
         .btn-primary:active { opacity: 0.8; }
         .btn-primary:disabled { background: var(--light-gray); cursor: not-allowed; }
         
-        #message { text-align: center; padding: 20px; border-radius: 8px; margin-top: 20px; display: none; }
+        #message { text-align: center; padding: 20px; border-radius: 8px; margin-top: 20px; display: none; font-weight: 500; }
         #message.success { background: #4CAF50; color: white; }
-        #message.error { background: #E91E63; color: white; }
+        #message.error { background: #c12929; color: white; }
     </style>
 </head>
 <body>
@@ -39,7 +39,8 @@
     <div class="container">
         <div class="logo">Marcar Horário <span>BarberControl</span></div>
         
-        <form id="form-agendamento">
+        <!-- ==== BUG CORRIGIDO: Removido <form> e <button type="submit"> ==== -->
+        <div id="form-agendamento">
             <div class="form-group">
                 <label>Seu Nome</label>
                 <input type="text" id="agenda-nome" class="form-control" placeholder="Seu nome completo" required>
@@ -63,8 +64,9 @@
                 <label>Data e Hora</label>
                 <input type="datetime-local" id="agenda-datahora" class="form-control" required>
             </div>
-            <button type="submit" class="btn btn-primary" id="btn-submit">Confirmar Agendamento</button>
-        </form>
+            <!-- ==== BUG CORRIGIDO: Adicionado type="button" e onclick ==== -->
+            <button type="button" class="btn btn-primary" id="btn-submit" onclick="handleAgendamento()">Confirmar Agendamento</button>
+        </div>
         
         <div id="message"></div>
     </div>
@@ -85,28 +87,26 @@
 
         // ===================================================================
         // <<< CUIDADO! CRIE UM NOVO PROJETO E COLE AS NOVAS CHAVES AQUI! >>>
-        // As suas chaves antigas estão comprometidas!
         // ===================================================================
         
         const firebaseConfig = {
-            apiKey: "COLE-SUA-NOVA-API-KEY-AQUI",
-            authDomain: "COLE-SEU-NOVO-AUTH-DOMAIN-AQUI",
-            projectId: "COLE-SEU-NOVO-PROJECT-ID-AQUI",
-            storageBucket: "COLE-SEU-NOVO-STORAGE-BUCKET-AQUI",
-            messagingSenderId: "COLE-SEU-NOVO-MESSAGING-SENDER-ID-AQUI",
-            appId: "COLE-SEU-NOVO-APP-ID-AQUI"
+            apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
+  authDomain: "barbercontrol-6b1f1.firebaseapp.com",
+  projectId: "barbercontrol-6b1f1",
+  storageBucket: "barbercontrol-6b1f1.firebasestorage.app",
+  messagingSenderId: "984412023617",
+  appId: "1:984412023617:web:1b10bf21e1ec3a63bf0fc0",
+  measurementId: "G-JR9PJSCHWG"
         };
         // ===================================================================
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const form = document.getElementById('form-agendamento');
         const messageDiv = document.getElementById('message');
         const submitButton = document.getElementById('btn-submit');
+        const form = document.getElementById('form-agendamento'); // Div do formulário
 
-        // Pega o ID do barbeiro pela URL
-        // O link deve ser: .../agendar.html?id=USER_ID_DO_BARBEIRO
         const urlParams = new URLSearchParams(window.location.search);
         const barbeiroId = urlParams.get('id');
 
@@ -115,12 +115,13 @@
             form.style.display = 'none';
         }
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        // ==== BUG CORRIGIDO: Movida a lógica para uma função window ====
+        window.handleAgendamento = async () => {
             if (!barbeiroId) return;
 
             submitButton.disabled = true;
             submitButton.innerText = "Aguarde...";
+            messageDiv.style.display = 'none'; 
 
             try {
                 const nome = document.getElementById('agenda-nome').value;
@@ -128,49 +129,60 @@
                 const servico = document.getElementById('agenda-servico').value;
                 const dataHoraStr = document.getElementById('agenda-datahora').value;
                 
-                const dataHora = Timestamp.fromDate(new Date(dataHoraStr));
+                // Validação de campos vazios
+                if (!nome || !telefone || !servico || !dataHoraStr) {
+                    throw new Error("Por favor, preencha todos os campos.");
+                }
 
-                // 1. Encontra ou Cria o Cliente na base daquele barbeiro
+                const dataHoraSelecionada = new Date(dataHoraStr);
+                const agora = new Date();
+
+                if (dataHoraSelecionada < agora) {
+                    throw new Error("Você não pode agendar um horário no passado. Por favor, escolha uma data e hora futura.");
+                }
+
+                const dataHora = Timestamp.fromDate(dataHoraSelecionada);
+
                 const clienteId = await findOrCreateClient(barbeiroId, nome, telefone);
 
-                // 2. Salva o Agendamento
                 const agendaRef = collection(db, 'empresas', barbeiroId, 'agendamentos');
                 await addDoc(agendaRef, {
                     clienteId: clienteId,
-                    clienteNome: nome, // Salva o nome para fácil acesso na agenda
+                    clienteNome: nome, 
                     servico: servico,
                     dataHora: dataHora,
                     status: 'pendente'
                 });
 
                 showMessage("success", "Horário marcado com sucesso! Até lá.");
-                form.reset();
+                // Limpa o formulário manualmente
+                document.getElementById('agenda-nome').value = '';
+                document.getElementById('agenda-telefone').value = '';
+                document.getElementById('agenda-servico').value = '';
+                document.getElementById('agenda-datahora').value = '';
 
             } catch (error) {
-                showMessage("error", "Erro ao marcar horário. Tente novamente.");
+                showMessage("error", error.message || "Erro ao marcar horário. Tente novamente.");
                 console.error("Erro: ", error);
             } finally {
                 submitButton.disabled = false;
                 submitButton.innerText = "Confirmar Agendamento";
             }
-        });
+        };
 
         async function findOrCreateClient(userId, nome, telefone) {
             const clientesRef = collection(db, 'empresas', userId, 'clientes');
             
-            // Procura pelo telefone (mais único que o nome)
             const q = query(clientesRef, where("telefone", "==", telefone));
             const querySnapshot = await getDocs(q);
             
             if (!querySnapshot.empty) {
-                // Cliente já existe, retorna o ID
                 return querySnapshot.docs[0].id;
             } else {
-                // Cliente não existe, cria um novo
                 const novoCliente = {
                     nome: nome,
                     telefone: telefone,
-                    dataPrimeiraVisita: null // O app principal vai preencher isto
+                    dataPrimeiraVisita: null 
                 };
                 const docRef = await addDoc(clientesRef, novoCliente);
                 return docRef.id;
