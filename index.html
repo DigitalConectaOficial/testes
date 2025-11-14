@@ -69,6 +69,26 @@
         .card .value { font-size: 1.8rem; font-weight: 700; color: var(--white); }
         .card .sub { font-size: 0.8rem; color: var(--green); margin-top: 5px; font-weight: 500; }
 
+        /* ==== NOVO: Estilos para o "Olhinho" ==== */
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .card-header h3 {
+            margin-bottom: 0; /* Remover margem que estava no h3 */
+        }
+        #toggle-balance-btn {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+        }
+        #toggle-balance-btn path {
+            fill: var(--text-gray);
+        }
+        /* ==== FIM DO NOVO ESTILO ==== */
+
         .chart-container { padding: 0 20px; margin-bottom: 20px; }
         .chart-box { background: var(--dark-gray); border: 1px solid var(--light-gray); border-radius: 12px; padding: 15px; }
 
@@ -111,7 +131,6 @@
         .form-control { width: 100%; padding: 15px; background: var(--black); border: 1px solid #444; color: var(--white); border-radius: 8px; font-size: 1rem; appearance: none; }
         .form-control:focus { border-color: var(--gold); }
         
-        /* Estilo para o Date Picker (iOS e Android) */
         .form-control[type="date"] { color-scheme: dark; }
         .form-control[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
 
@@ -165,7 +184,13 @@
         <div id="page-dashboard" class="page active">
             <div class="cards-grid">
                 <div class="card">
-                    <h3>Faturamento Hoje</h3>
+                    <!-- NOVO: Header do Card com o "olhinho" -->
+                    <div class="card-header">
+                        <h3>Faturamento Hoje</h3>
+                        <svg id="toggle-balance-btn" onclick="toggleBalance()" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <!-- O JS vai injetar o <path> do ícone aqui -->
+                        </svg>
+                    </div>
                     <div class="value" id="dash-fat-hoje">R$ 0,00</div>
                     <div class="sub" id="dash-atend-hoje">0 atendimentos</div>
                 </div>
@@ -200,9 +225,7 @@
             <div class="list" id="lista-clientes"></div>
         </div>
         
-        <!-- ==== PÁGINA DA AGENDA ATUALIZADA ==== -->
         <div id="page-agenda" class="page">
-            <!-- NOVO: Campo de Data -->
             <div style="padding: 20px;">
                 <label for="agenda-datepicker" style="color: var(--text-gray); font-size: 0.9rem; margin-bottom: 8px; display:block;">Pesquisar Agenda por Data:</label>
                 <input type="date" id="agenda-datepicker" class="form-control">
@@ -229,7 +252,6 @@
             </div>
         </div>
 
-        <!-- ==== NAVEGAÇÃO ATUALIZADA COM 4 ABAS ==== -->
         <nav class="nav-bottom">
             <button class="nav-item active" onclick="showPage('page-dashboard', this)">
                 <svg viewBox="0 0 24 24"><path d="M10,20V14H14V20H19V12H22L12,3L2,12H5V20H10Z"></path></svg>
@@ -332,7 +354,7 @@
         // ===================================================================
         
         const firebaseConfig = {
-          apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
+            apiKey: "AIzaSyB8CRcynG97ZLVf24wt9ylbs2kemYk6oSU",
   authDomain: "barbercontrol-6b1f1.firebaseapp.com",
   projectId: "barbercontrol-6b1f1",
   storageBucket: "barbercontrol-6b1f1.firebasestorage.app",
@@ -349,12 +371,21 @@
         let currentUserId = null; 
         let clientes = [];        
         let atendimentos = [];    
-        let agendamentos = []; // Array GLOBAL para todos os agendamentos pendentes
+        let agendamentos = []; 
         let myChart = null;
         let confirmCallback = null;
         let clientesListener = null;
         let atendimentosListener = null;
         let agendamentosListener = null; 
+        
+        // ==== NOVO: Estado de Visibilidade do Saldo ====
+        // Lê a preferência salva; se não houver, começa como 'true' (visível)
+        let isBalanceVisible = JSON.parse(localStorage.getItem('balanceVisible')) ?? true;
+        let dashboardValues = { totalHoje: 0 };
+        // SVGs dos ícones (olho aberto e olho fechado/cortado)
+        const iconEye = `<path fill-rule="evenodd" d="M10 12.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" clip-rule="evenodd" /><path fill-rule="evenodd" d="M.664 10.59a1.651 1.651 0 010-1.18l.88-1.472a.67.67 0 011.013-.235L3.4 8.82a1.64 1.64 0 012.28 1.48l.01.008.006.004a.668.668 0 00.12.04l.01.005a.67.67 0 00.113-.036c.01.003.02.006.03.009a.669.669 0 00.322 0c.01-.003.02-.006.03-.009a.669.669 0 00.113-.036l.01-.005.006-.003.01-.008c.04-.01.08-.024.12-.04a.67.67 0 00.005-.004l.006-.004.01-.008a1.64 1.64 0 012.28-1.48l.844-1.18a.67.67 0 011.013.235l.88 1.472a1.651 1.651 0 010 1.18l-.88 1.472a.67.67 0 01-1.013.235L16.6 11.18a1.64 1.64 0 01-2.28-1.48l-.01-.008-.006-.004a.668.668 0 00-.12-.04l-.01-.005a.67.67 0 00-.113-.036 1.64 1.64 0 00-.322 0 .67.67 0 00-.113.036l-.01.005-.006.003-.01.008a.668.668 0 00-.12.04l-.005.004-.006.004-.01.008a1.64 1.64 0 01-2.28 1.48l-.844 1.18a.67.67 0 01-1.013-.235l-.88-1.472zM10 15a5 5 0 100-10 5 5 0 000 10z" clip-rule="evenodd" />`;
+        const iconEyeSlash = `<path d="M10.79 12.21a2.5 2.5 0 00-3.08-3.08l3.08 3.08z" /><path fill-rule="evenodd" d="M2.06 6.513a11.53 11.53 0 00-1.4 3.447c.017.06.034.12.05.18a1.65 1.65 0 000 1.18c.017.06.034.12.05.18.42 1.2.988 2.29 1.67 3.26.024.033.048.067.072.1a.67.67 0 001.014-.236l.88-1.472a.67.67 0 00-.236-1.014 8.94 8.94 0 01-1.04-1.313.668.668 0 01.026-.645l.006-.009a.668.668 0 01.03-.042l.01-.013.008-.01a.668.668 0 01.042-.03l.01-.007.008-.005.01-.005a.67.67 0 01.218-.088l.014-.005.008-.002a.67.67 0 01.113-.014c.01-.001.02-.002.03-.002h.322a.67.67 0 01.03.002c.01.001.02.002.03.002a.67.67 0 01.113.014l.008.002.014.005a.67.67 0 01.218.088l.01.005.008.005.01.007.007.004.01.007.042.03.008.01.01.013a.668.668 0 01.03.042l.006.009c.01.014.017.03.026.045a8.94 8.94 0 01-1.04 1.313.67.67 0 00-.236 1.014l.88 1.472a.67.67 0 001.014.236c.024-.033.048-.067.072-.1a11.53 11.53 0 001.67-3.26c.017-.06.034-.12.05-.18a1.65 1.65 0 000-1.18c-.017-.06-.034-.12-.05-.18a11.53 11.53 0 00-1.67-3.26.67.67 0 00-1.014-.236l-.88 1.472a.67.67 0 00.236 1.014 8.94 8.94 0 011.04 1.313.668.668 0 01-.026.645l-.006.009a.668.668 0 01-.03.042l-.01.013-.008.01a.668.668 0 01-.042.03l-.01.007-.008.005-.01.005a.67.67 0 01-.218.088l-.014.005-.008.002a.67.67 0 01-.113-.014c-.01-.001-.02-.002-.03-.002h-.322a.67.67 0 01-.03.002c-.01.001-.02.002-.03.002a.67.67 0 01-.113.014l-.008.002-.014.005a.67.67 0 01-.218.088l-.01.005-.008.005-.01.007-.007.004-.01.007a.668.668 0 01-.042-.03l-.008-.01-.01-.013a.668.668 0 01-.03-.042l-.006-.009a.668.668 0 01-.026-.045 8.94 8.94 0 011.04-1.313.67.67 0 00.236-1.014l-.88-1.472a.67.67 0 00-1.014.236A11.53 11.53 0 002.06 6.513z" clip-rule="evenodd" />`;
+        // ==== FIM DAS NOVAS VARIÁVEIS ====
 
         onAuthStateChanged(auth, (user) => {
             const authView = document.getElementById('auth-view');
@@ -408,13 +439,10 @@
         }
 
         function initApp() {
-            // Define o Datepicker para hoje
             document.getElementById('agenda-datepicker').value = new Date().toLocaleDateString('en-CA');
-            
             showPage('page-dashboard', document.querySelector('.nav-item')); 
             
             document.getElementById('search-cliente').addEventListener('input', renderizarListaClientes);
-            // NOVO: Listener para o Datepicker
             document.getElementById('agenda-datepicker').addEventListener('input', renderizarAgenda);
 
 
@@ -422,14 +450,12 @@
             if (atendimentosListener) atendimentosListener();
             if (agendamentosListener) agendamentosListener(); 
 
-            // Listener de Clientes (sem mudança)
             const clientesRef = collection(db, 'empresas', currentUserId, 'clientes');
             clientesListener = onSnapshot(query(clientesRef), (snapshot) => {
                 clientes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 renderizarListaClientes(); 
             });
 
-            // Listener de Atendimentos (sem mudança)
             const atendRef = collection(db, 'empresas', currentUserId, 'atendimentos');
             atendimentosListener = onSnapshot(query(atendRef), (snapshot) => {
                 atendimentos = snapshot.docs.map(doc => {
@@ -447,8 +473,6 @@
                 renderizarListaRecentes();
             });
 
-            // ==== LISTENER DA AGENDA ATUALIZADO ====
-            // Agora, ele puxa TODOS os agendamentos pendentes (sem filtro de data)
             const agendaRef = collection(db, 'empresas', currentUserId, 'agendamentos');
             const q = query(agendaRef, where("status", "==", "pendente"));
             
@@ -463,16 +487,16 @@
                     }
                 }).filter(Boolean);
                 
-                // Renderiza a agenda (que vai usar o datepicker para filtrar)
                 renderizarAgenda(); 
             }, (error) => {
                 console.error("Erro ao ouvir agendamentos: ", error);
                 if (error.code === 'failed-precondition') {
-                    // Este erro acontece se o índice composto (status, dataHora) não existir
-                    // MAS a nossa query nova (só por status) não precisa de índice.
                     showAlert("Erro de base de dados. Recarregue a página.");
                 }
             });
+
+            // NOVO: Renderiza o saldo assim que o app inicia
+            renderBalance();
         }
 
         window.showPage = (pageId, navElement) => {
@@ -485,10 +509,9 @@
             const fab = document.querySelector('.fab');
             fab.style.display = (pageId === 'page-dashboard') ? 'flex' : 'none';
 
-            // NOVO: Define o datepicker para hoje sempre que a aba da agenda for aberta
             if (pageId === 'page-agenda') {
                 document.getElementById('agenda-datepicker').value = new Date().toLocaleDateString('en-CA');
-                renderizarAgenda(); // Força a renderização com a data de hoje
+                renderizarAgenda(); 
             }
         }
 
@@ -642,25 +665,20 @@
             });
         }
 
-        // ==== FUNÇÃO DA AGENDA ATUALIZADA (v10) ====
         function renderizarAgenda() {
             const lista = document.getElementById('lista-agenda');
             lista.innerHTML = '';
             
-            // 1. Pega a data do calendário
             const dataSelecionadaStr = document.getElementById('agenda-datepicker').value;
             if (!dataSelecionadaStr) {
-                // Se não houver data (primeiro carregamento), define para hoje
                 document.getElementById('agenda-datepicker').value = new Date().toLocaleDateString('en-CA');
-                return; // O listener vai chamar esta função de novo
+                return; 
             }
 
-            // 2. Filtra o array GLOBAL 'agendamentos'
             const agendamentosFiltrados = agendamentos.filter(a => 
                 new Date(a.dataHora).toLocaleDateString('en-CA') === dataSelecionadaStr
             );
             
-            // 3. Atualiza o título
             document.getElementById('agenda-title').innerText = `Agenda de ${formatarData(dataSelecionadaStr)}`;
 
             if (agendamentosFiltrados.length === 0) {
@@ -668,13 +686,11 @@
                 return;
             }
             
-            // 4. Ordena e mostra
             const ordenados = [...agendamentosFiltrados].sort((a,b) => new Date(a.dataHora) - new Date(b.dataHora));
             
             ordenados.forEach(item => {
                 const d = new Date(item.dataHora);
                 const horaFormatada = d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-                //const dataFormatada = d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
 
                 const div = document.createElement('div');
                 div.className = 'agenda-item';
@@ -725,7 +741,11 @@
                 return dataVisita.toLocaleDateString('en-CA') === hojeStr;
             });
             
-            document.getElementById('dash-fat-hoje').innerText = formatCurrency(totalHoje);
+            // ==== MUDANÇA: Salva o valor e chama o render ====
+            dashboardValues.totalHoje = totalHoje; // Salva o valor
+            renderBalance(); // Chama o render
+            // ==== FIM DA MUDANÇA ====
+            
             document.getElementById('dash-atend-hoje').innerText = `${atendimentosHoje.length} atendimentos`;
             document.getElementById('dash-clientes-hoje').innerText = clientesAtendidosHojeIds.size;
             document.getElementById('dash-novos-hoje').innerText = `${novosClientesHoje.length} novos`;
@@ -873,7 +893,32 @@
             return value.toLocaleString('pt-BR', {style: 'currency', currency: 'BRL'});
         }
         
-        // NOVO: Helper para formatar data (ex: 13/11/2025)
+        // ==== NOVAS FUNÇÕES PARA O "OLHINHO" ====
+        // Função para ligar/desligar a visibilidade
+        window.toggleBalance = () => {
+            isBalanceVisible = !isBalanceVisible;
+            // Salva a preferência no celular
+            localStorage.setItem('balanceVisible', JSON.stringify(isBalanceVisible));
+            renderBalance();
+        }
+
+        // Função para desenhar os valores na tela
+        function renderBalance() {
+            const valorEl = document.getElementById('dash-fat-hoje');
+            const iconEl = document.getElementById('toggle-balance-btn');
+            
+            if (isBalanceVisible) {
+                // Mostra o valor
+                valorEl.innerText = formatCurrency(dashboardValues.totalHoje);
+                iconEl.innerHTML = iconEyeSlash; // Ícone de "esconder" (olho cortado)
+            } else {
+                // Esconde o valor
+                valorEl.innerText = "R$ ******";
+                iconEl.innerHTML = iconEye; // Ícone de "mostrar" (olho aberto)
+            }
+        }
+        // ==== FIM DAS NOVAS FUNÇÕES ====
+        
         function formatarData(isoDate) {
             const [ano, mes, dia] = isoDate.split('-');
             return `${dia}/${mes}/${ano}`;
